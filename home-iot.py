@@ -1,4 +1,5 @@
-from flask import Flask, g
+from flask import Flask
+import json
 
 app = Flask(__name__)
 light_status = 'off'
@@ -32,6 +33,10 @@ def setStatus(type, value):
 def start():
     return 'IOT HOME PROJECT!'
 
+@app.route('/api/v1.0/', methods=['GET'])
+def api():
+    return 'working'
+
 @app.route('/api/v1.0/light', methods=['GET'])
 def get_light_status():
     light_status = getStatus('light')
@@ -63,6 +68,29 @@ def post_valve_status():
     else:
         setStatus('valve', 'on')
     return getStatus('valve')
+
+@app.route('/api/v1.0/fan', methods=['GET'])
+def get_fan_status():
+    fan_status = getStatus('fan')
+    if fan_status is None:
+        setStatus('fan', 'off')
+    return getStatus('fan')
+
+@app.route('/api/v1.0/fan', methods=['POST'])
+def post_fan_status():
+    fan_status = getStatus('fan')
+    if fan_status == "on":
+        setStatus('fan', 'off')
+    else:
+        setStatus('fan', 'on')
+    return getStatus('fan')
+
+@app.route('/api/v1.0/status', methods=['GET'])
+def get_all_status():
+    valve_status = getStatus('valve')
+    light_status = getStatus('light')
+    fan_status = getStatus('fan')
+    return json.dumps({'valve': valve_status, 'light':light_status,'fan':  fan_status})
 
 if __name__ == '__main__':
 
