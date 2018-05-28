@@ -1,10 +1,14 @@
 from flask import Flask
 import json
+import datetime
 
 app = Flask(__name__)
 light_status = 'off'
 valve_status = 'off'
 fan_status = 'off'
+timestamp = datetime.datetime.now().time()
+mode = 'AUTO'
+
 
 def getStatus(type):
     global light_status
@@ -27,6 +31,22 @@ def setStatus(type, value):
         valve_status = value
     if(type == 'fan'):
         fan_status = value
+
+def getMode():
+    global mode
+    return mode
+
+def setMode(v):
+    global mode
+    mode = v
+
+def warteringTime():
+    if (mode == 'AUTO'):
+        print("Wartering at %s" % (timestamp))
+        return datetime.time(hour=6, minute=0) <= timestamp <= datetime.time(hour=6, minute=40) or \
+               datetime.time(hour=19, minute=0) <= timestamp <= datetime.time(hour=19, minute=10)
+    else:
+        return False
 
 
 @app.route('/')
@@ -55,6 +75,9 @@ def post_light_status():
 
 @app.route('/api/v1.0/valve', methods=['GET'])
 def get_valve_status():
+    if warteringTime():
+        valve_status = 'on'
+        return valve_status
     valve_status = getStatus('valve')
     if valve_status is None:
         setStatus('valve', 'off')
@@ -92,6 +115,14 @@ def get_all_status():
     fan_status = getStatus('fan')
     return json.dumps({'valve': valve_status, 'light':light_status,'fan':  fan_status})
 
+@app.route('/api/v1.0/mode', methods=['POST'])
+def post_mode():
+    if getMode() == 'AUTO':
+        setMode('MANUAL')
+    else:
+        setMode('AUTO')
+    return mode
+
 if __name__ == '__main__':
 
-    app.run()
+    app.run("0.0.0.0")
