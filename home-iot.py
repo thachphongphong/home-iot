@@ -43,7 +43,7 @@ def setMode(v):
 def warteringTime():
     if (mode == 'AUTO'):
         print("Wartering at %s" % (timestamp))
-        return datetime.time(hour=6, minute=0) <= timestamp <= datetime.time(hour=6, minute=40) or \
+        return datetime.time(hour=6, minute=0) <= timestamp <= datetime.time(hour=6, minute=10) or \
                datetime.time(hour=19, minute=0) <= timestamp <= datetime.time(hour=19, minute=10)
     else:
         return False
