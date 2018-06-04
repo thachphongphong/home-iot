@@ -123,6 +123,13 @@ def post_mode():
         setMode('AUTO')
     return mode
 
+@app.route('/api/v1.0/mode', methods=['GET'])
+def get_mode():
+    mode = getMode()
+    if mode is None:
+        setMode('MANUAL')
+    return getMode()
+
 if __name__ == '__main__':
 
     app.run("0.0.0.0")
