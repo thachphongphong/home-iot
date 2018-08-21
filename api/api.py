@@ -53,21 +53,21 @@ def warteringTime():
 def status():
     return 'working'
 
-@api.route('/v1.0/light', methods=['GET'])
-def get_light_status():
-    light_status = getStatus('light')
-    if light_status is None:
-        setStatus('light', 'off')
-    return getStatus('light')
-
-@api.route('/v1.0/light', methods=['POST'])
-def post_light_status():
-    light_status = getStatus('light')
-    if light_status == "on":
-        setStatus('light', 'off')
-    else:
-        setStatus('light', 'on')
-    return getStatus('light')
+# @api.route('/v1.0/light', methods=['GET'])
+# def get_light_status():
+#     light_status = getStatus('light')
+#     if light_status is None:
+#         setStatus('light', 'off')
+#     return getStatus('light')
+#
+# @api.route('/v1.0/light', methods=['POST'])
+# def post_light_status():
+#     light_status = getStatus('light')
+#     if light_status == "on":
+#         setStatus('light', 'off')
+#     else:
+#         setStatus('light', 'on')
+#     return getStatus('light')
 
 @api.route('/v1.0/valve', methods=['GET'])
 def get_valve_status():
