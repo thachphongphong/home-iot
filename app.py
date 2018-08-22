@@ -28,8 +28,8 @@ app.config['MQTT_PASSWORD'] = ''
 app.config['MQTT_KEEPALIVE'] = 1
 app.config['MQTT_TLS_ENABLED'] = False
 
-devices = ["sonoff2"]
-status = ["off"]
+devices = ["sonoff2","sonoff1"]
+status = ["off","off"]
 
 mqtt = Mqtt(app)
 socketio = SocketIO(app)
