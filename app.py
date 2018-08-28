@@ -25,7 +25,7 @@ app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_CLIENT_ID'] = 'iot-home'
 app.config['MQTT_USERNAME'] = ''
 app.config['MQTT_PASSWORD'] = ''
-app.config['MQTT_KEEPALIVE'] = 1
+app.config['MQTT_KEEPALIVE'] = 5
 app.config['MQTT_TLS_ENABLED'] = False
 
 devices = ["sonoff2","sonoff1"]
@@ -117,4 +117,4 @@ if __name__ == '__main__':
     for id in devices:
         topic = "cmnd/"+id+"/power"
         mqtt.subscribe(topic, 0)
-    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=True, debug=True)
+    socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
