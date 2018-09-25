@@ -1,13 +1,19 @@
 """
 A small Test application to show how to use Flask-MQTT.
 """
-
+from importlib import import_module
+import os
 import eventlet
-import json
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
+
+# import camera driver
+if os.environ.get('CAMERA'):
+    Camera = import_module('camera_' + os.environ['CAMERA']).Camera
+else:
+    from camera import Camera
 
 # Blueprints
 from api.api import api
@@ -35,6 +41,9 @@ mqtt = Mqtt(app)
 socketio = SocketIO(app)
 bootstrap = Bootstrap(app)
 
+tmp_dir = '/tmp/'
+tmp_filename = 'snapshot.jpg'
+
 def checkTopic(t):
     return True
     if t in topics:
@@ -46,6 +55,19 @@ def checkTopic(t):
 def index():
     return render_template('index.html')
 
+def gen(camera):
+    """Video streaming generator function."""
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen(Camera()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # @socketio.on('publish')
 # def handle_publish(json_str):
