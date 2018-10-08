@@ -13,7 +13,7 @@ from flask_bootstrap import Bootstrap
 if os.environ.get('CAMERA'):
     Camera = import_module('camera_' + os.environ['CAMERA']).Camera
 else:
-    from camera import Camera
+    from camera_opencv import Camera
 
 # Blueprints
 from api.api import api
