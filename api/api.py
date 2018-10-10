@@ -104,12 +104,12 @@ def post_fan_status():
         setStatus('fan', 'on')
     return getStatus('fan')
 
-@api.route('/v1.0/status', methods=['GET'])
-def get_all_status():
-    valve_status = getStatus('valve')
-    light_status = getStatus('light')
-    fan_status = getStatus('fan')
-    return json.dumps({'valve': valve_status, 'light':light_status,'fan':  fan_status})
+# @api.route('/v1.0/status', methods=['GET'])
+# def get_all_status():
+#     valve_status = getStatus('valve')
+#     light_status = getStatus('light')
+#     fan_status = getStatus('fan')
+#     return json.dumps({'valve': valve_status, 'light':light_status,'fan':  fan_status})
 
 @api.route('/v1.0/mode', methods=['POST'])
 def post_mode():

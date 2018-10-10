@@ -28,8 +28,8 @@ app.config['MQTT_PASSWORD'] = ''
 app.config['MQTT_KEEPALIVE'] = 5
 app.config['MQTT_TLS_ENABLED'] = False
 
-devices = ["sonoff2","sonoff1"]
-status = ["off","off"]
+devices = ["sonoff1","sonoff2","sonoff-valve"]
+status = ["off","off","off"]
 
 mqtt = Mqtt(app)
 socketio = SocketIO(app)
@@ -63,15 +63,15 @@ def index():
 #     if checkTopic(data['topic']):
 #         mqtt.subscribe(data['topic'], data['qos'])
 
-@app.route('/api/v1.0/light/<devId>', methods=['GET'])
+@app.route('/api/v1.0/<devId>', methods=['GET'])
 def get_light_status(devId):
     for idx, id in enumerate(devices):
         if(id == devId):
-            print("GET /api/v1.0/light/ %s:" % status[idx])
+            print("GET /api/v1.0/%s: %s:" % (devId,status[idx]))
             return status[idx]
     return ""
 
-@app.route('/api/v1.0/light/<devId>', methods=['POST'])
+@app.route('/api/v1.0/<devId>', methods=['POST'])
 def post_light_status(devId):
     for idx, id in enumerate(devices):
         if(id == devId):
@@ -81,12 +81,16 @@ def post_light_status(devId):
             else:
                 status[idx] = 'on'
             topic = "cmnd/"+id+"/power"
-            print("POST /api/v1.0/light/ %s: %s" % (topic, status[idx]))
+            print("POST /api/v1.0/%s: %s" % (topic, status[idx]))
             mqtt.publish(topic, status[idx], 2)
             socketio.emit('mqtt_message')
             return status[idx]
     return ''
 
+@app.route('/api/v1.0/status', methods=['GET'])
+def get_all_status():
+    global status
+    return json.dumps(status)
 
 # @mqtt.on_message()
 # def handle_mqtt_message(client, userdata, message):

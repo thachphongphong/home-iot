@@ -55,7 +55,7 @@
     });
 
     function loadTopic(id) {
-        $.get("/api/v1.0/light/"+id, function(data, status){
+        $.get("/api/v1.0/"+id, function(data, status){
             var $textarea = $('#subscribe_messages');
             var text = 'Device: ' + id + '     Status: ' + data;
             $textarea.val($textarea.val() + text + '\n');
@@ -170,8 +170,9 @@
                                     <label class="control-label col-xs-4">Topic: </label>
                                     <div class="col-xs-8">
                                         <select id="topic" class="form-control">
-                                            <option value="sonoff2">sonoff2</option>
-                                            <option value="sonoff1">sonoff1</option>
+                                            <option value="sonoff1">Front Light</option>
+                                            <option value="sonoff2">2nd Floor Light</option>
+                                            <option value="sonoff-value">Valve</option>
                                         </select>
                                     </div>
                                 </div>
