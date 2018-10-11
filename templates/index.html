@@ -57,9 +57,13 @@
     function loadTopic(id) {
         $.get("/api/v1.0/"+id, function(data, status){
             var $textarea = $('#subscribe_messages');
-            var text = 'Device: ' + id + '     Status: ' + data;
+            var text = 'Device: ' + getDevName(id) + '     Status: ' + data;
             $textarea.val($textarea.val() + text + '\n');
         });
+    }
+
+    function getDevName(id) {
+       return $("#topic option[value='"+id+"']").text();
     }
 </script>
 {% endblock %}
@@ -172,7 +176,7 @@
                                         <select id="topic" class="form-control">
                                             <option value="sonoff1">Front Light</option>
                                             <option value="sonoff2">2nd Floor Light</option>
-                                            <option value="sonoff-value">Valve</option>
+                                            <option value="sonoff-valve">Valve</option>
                                         </select>
                                     </div>
                                 </div>

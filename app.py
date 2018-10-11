@@ -66,6 +66,7 @@ def index():
 @app.route('/api/v1.0/<devId>', methods=['GET'])
 def get_light_status(devId):
     for idx, id in enumerate(devices):
+        print("ID : %s"  % id)
         if(id == devId):
             print("GET /api/v1.0/%s: %s:" % (devId,status[idx]))
             return status[idx]
