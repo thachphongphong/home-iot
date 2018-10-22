@@ -3,7 +3,7 @@ A small Test application to show how to use Flask-MQTT.
 """
 
 import eventlet
-import json
+import json,logging
 from flask import Flask, render_template
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
@@ -15,6 +15,11 @@ from api.api import api
 eventlet.monkey_patch()
 
 app = Flask(__name__)
+
+iot_error_logger = logging.getLogger('iot.error')
+app.logger.handlers.extend(iot_error_logger.handlers)
+app.logger.setLevel(logging.DEBUG)
+app.logger.debug('START IOT API')
 
 app.register_blueprint(api)
 
@@ -66,9 +71,9 @@ def index():
 @app.route('/api/v1.0/<devId>', methods=['GET'])
 def get_light_status(devId):
     for idx, id in enumerate(devices):
-        print("ID : %s"  % id)
+        app.logger.debug("ID : %s"  % id)
         if(id == devId):
-            print("GET /api/v1.0/%s: %s:" % (devId,status[idx]))
+            app.logger.debug("GET /api/v1.0/%s: %s:" % (devId,status[idx]))
             return status[idx]
     return ""
 
@@ -82,7 +87,7 @@ def post_light_status(devId):
             else:
                 status[idx] = 'on'
             topic = "cmnd/"+id+"/power"
-            print("POST /api/v1.0/%s: %s" % (topic, status[idx]))
+            app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status[idx]))
             mqtt.publish(topic, status[idx], 2)
             socketio.emit('mqtt_message')
             return status[idx]
@@ -104,7 +109,7 @@ def handle_mqtt_message(client, userdata, message):
     for idx, id in enumerate(devices):
         topic = "stat/"+id+"/POWER"
         if(topic == message.topic):
-            print("on_message %s: %s: %s " % (idx, topic, message.payload.decode()))
+            app.logger.debug("on_message %s: %s: %s " % (idx, topic, message.payload.decode()))
             status[idx] =  message.payload.decode().lower()
 
 # @mqtt.on_log()
