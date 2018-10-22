@@ -112,6 +112,7 @@ def handle_mqtt_message(client, userdata, message):
         if(topic == message.topic):
             app.logger.debug("on_message %s: %s: %s " % (idx, topic, message.payload.decode()))
             status[idx] =  message.payload.decode().lower()
+            socketio.emit('mqtt_message')
 
 # @mqtt.on_log()
 # def handle_logging(client, userdata, level, buf):
