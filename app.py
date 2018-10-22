@@ -123,6 +123,6 @@ def start():
 
 if __name__ == '__main__':
     for id in devices:
-        topic = "cmnd/"+id+"/power"
-        mqtt.subscribe(topic, 0)
+        mqtt.subscribe("cmnd/"+id+"/power", 0)
+        mqtt.subscribe("stat/"+id+"/POWER", 0)
     socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
