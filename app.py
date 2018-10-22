@@ -93,21 +93,19 @@ def get_all_status():
     global status
     return json.dumps(status)
 
-# @mqtt.on_message()
-# def handle_mqtt_message(client, userdata, message):
-#     data = dict(
-#         topic=message.topic,
-#         payload=message.payload.decode(),
-#         qos=message.qos,
-#     )
-#     print("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
-#     global status
-#     for idx, id in enumerate(devices):
-#         topic = "cmnd/"+id+"/power"
-#         if(topic == message.topic):
-#             print("on_message %s: %s: %s " % (idx, topic, message.payload.decode()))
-#             status[idx] =  message.payload.decode()
-#             socketio.emit('mqtt_message', data=data)
+@mqtt.on_message()
+def handle_mqtt_message(client, userdata, message):
+    data = dict(
+        topic=message.topic,
+        payload=message.payload.decode(),
+        qos=message.qos,
+    )
+    global status
+    for idx, id in enumerate(devices):
+        topic = "stat/"+id+"/POWER"
+        if(topic == message.topic):
+            print("on_message %s: %s: %s " % (idx, topic, message.payload.decode()))
+            status[idx] =  message.payload.decode().lower()
 
 # @mqtt.on_log()
 # def handle_logging(client, userdata, level, buf):
