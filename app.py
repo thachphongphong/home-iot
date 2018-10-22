@@ -1,9 +1,9 @@
 """
 A small Test application to show how to use Flask-MQTT.
 """
-
+import logging
 import eventlet
-import json,logging
+import json
 from flask import Flask, render_template
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
@@ -105,7 +105,7 @@ def handle_mqtt_message(client, userdata, message):
         payload=message.payload.decode(),
         qos=message.qos,
     )
-    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
+#    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
     global status
     for idx, id in enumerate(devices):
         topic = "stat/"+id+"/POWER"
@@ -118,12 +118,16 @@ def handle_mqtt_message(client, userdata, message):
 #     # print(level, buf)
 #     pass
 
+@mqtt.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    for id in devices:
+        app.logger.debug("Subscribe device topic %s" % id)
+       # mqtt.subscribe("cmnd/"+id+"/power", 0)
+        mqtt.subscribe("stat/"+id+"/POWER", 0)
+
 @app.route('/home')
 def start():
     return 'IOT HOME PROJECT!'
 
 if __name__ == '__main__':
-    for id in devices:
-        mqtt.subscribe("cmnd/"+id+"/power", 0)
-        mqtt.subscribe("stat/"+id+"/POWER", 0)
     socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
