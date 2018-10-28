@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve iot
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/pi/IOT/home-iot
+Environment="PATH=/home/pi/IOT/home-iot/bin"
+ExecStart=/home/pi/IOT/home-iot/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 --log-file /var/log/iot.log app:app
+
+[Install]
+WantedBy=multi-user.target
