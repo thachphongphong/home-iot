@@ -15,3 +15,6 @@
 - sudo mv iot.service /etc/systemd/system/iot.service
 - sudo apt-get install nginx
 - sudo mv iot.conf /etc/nginx/conf.d/iot.conf
+
+## debug
+- gunicorn --worker-class eventlet --log-level debug --bind 0.0.0.0:500 app

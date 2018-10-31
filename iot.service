@@ -7,7 +7,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/home/pi/IOT/home-iot
 Environment="PATH=/home/pi/IOT/home-iot/bin"
-ExecStart=/home/pi/IOT/home-iot/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 --log-file /var/log/iot.log app:app
+ExecStart=/home/pi/IOT/home-iot/bin/gunicorn --worker-class eventlet -w 1 --bind 127.0.0.1:5000 --log-level debug -$
 
 [Install]
 WantedBy=multi-user.target
