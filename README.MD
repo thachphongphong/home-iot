@@ -1,4 +1,7 @@
 # Steps
+## DB
+- sqlite3 iot
+- CREATE TABLE timer (devId integer, timer integer, period text, at text);
 
 ## Install
 - sudo apt-get install python-dev

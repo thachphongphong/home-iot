@@ -192,6 +192,37 @@
                 </div>
             </div>
         </div>
+        <div class="col-xs-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Device Timers</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-xs-4">Device: </label>
+                                    <div class="col-xs-8">
+                                        <select id="device" class="form-control">
+                                            <option value="sonoff1">Front Light</option>
+                                            <option value="sonoff2">2nd Floor Light</option>
+                                            <option value="sonoff-valve">Valve</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-xs-4">Messages:</label>
+                                    <div class="col-xs-8">
+                                        <textarea id="timer" class="form-control" rows=10 >{% for timer in timers %}{{timer[0]}} - {{timer[1]}} - {{timer[2]}}&#13;&#10;{% endfor %}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

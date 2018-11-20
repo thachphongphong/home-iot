@@ -1,0 +1,8 @@
+venv
+.idea
+.gitignore
+Dockerfile
+README.MD
+iot.service
+home-iot.iml
+iot.conf
