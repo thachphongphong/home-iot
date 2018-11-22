@@ -214,7 +214,7 @@
                                 <div class="form-group">
                                     <label class="control-label col-xs-4">Messages:</label>
                                     <div class="col-xs-8">
-                                        <textarea id="timer" class="form-control" rows=10 >{% for timer in timers %}{{timer[0]}} - {{timer[1]}} - {{timer[2]}}&#13;&#10;{% endfor %}</textarea>
+                                        <textarea id="timer" class="form-control" rows=10 >{% for timer in timers %}{{timer[0]}} - {{timer[1]}} - {{timer[2]}} - {{timer[3]}} - {% if timer[4] == 0 %}OFF{% elif timer[4] == 1 %}ON{% else %}TOGGLE{% endif %}&#13;&#10;{% endfor %}</textarea>
                                     </div>
                                 </div>
                             </div>

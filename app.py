@@ -163,34 +163,70 @@ def timer_job():
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
 def add_to_schedule(devId, timer=1):
     if checkDevice(devId):
-        app.logger.debug(json.dumps(request.json))
-        # job = schedule.every()
-        # if count == 1:
-        #     if period == 'day':
-        #         job = job.day
-        #     elif period == 'hour':
-        #         job = job.hour
-        #     elif period == 'minute':
-        #         job = job.minute
-        #     elif period == 'second':
-        #         job = job.second
-        #     else:
-        #         return "Invalid period " + period
-        # else:
-        #     if period == 'day':
-        #         job = job.days
-        #     elif period == 'hour':
-        #         job = job.hours
-        #     elif period == 'minute':
-        #         job = job.minutes
-        #     elif period == 'second':
-        #         job = job.seconds
-        #     else:
-        #         return "Invalid period " + period
-        # job.do(timer_job)
+        try:
+            data = request.json
+            db = get_db()
+            cur = db.cursor()
+            cur.execute("SELECT * FROM timer WHERE devId=? AND timer=?", (devId,timer))
+            row = cur.fetchall()
+            if len(row)==0:
+                app.logger.debug("ADD NEW %s", data)
+                cur.execute("INSERT INTO timer VALUES(?,?,?,?,?)", (devId, timer, data['period'], data['at'], data['action']))
+            else:
+                app.logger.debug("REPLACE DATA %s", data)
+                cur.execute("UPDATE timer SET period=?, at=?, action=? WHERE devId=? AND timer=?", (data['period'], data['at'], data['action'], devId, timer))
+            db.commit()
+            app.logger.debug("Record successfully added %s", timer)
+        except sql.Error as e:
+            db.rollback()
+            app.logger.debug("Database error: %s" % e)
+        except Exception as e:
+            db.rollback()
+            app.logger.debug("Exception in _query: %s" % e)
+        # finally:
+        #     db.close()
+        load_job()
         return "OK"
     else:
         return "Device not found"
+
+def add_job(timer):
+    app.logger.debug("Add job: %s  %s  %s  %s  %s" % (timer[0], timer[1], timer[2], timer[3], timer[4]))
+    # job = schedule.every()
+    # if 1 == 1:
+    #     if period == 'day':
+    #         job = job.day
+    #     elif period == 'hour':
+    #         job = job.hour
+    #     elif period == 'minute':
+    #         job = job.minute
+    #     elif period == 'second':
+    #         job = job.second
+    #     else:
+    #         return "Invalid period " + period
+    # else:
+    #     if period == 'day':
+    #         job = job.days
+    #     elif period == 'hour':
+    #         job = job.hours
+    #     elif period == 'minute':
+    #         job = job.minutes
+    #     elif period == 'second':
+    #         job = job.seconds
+    #     else:
+    #         return "Invalid period " + period
+    # job.do(timer_job)
+
+def update_job():
+    app.logger.debug("Update job")
+
+def load_job():
+    app.logger.debug("Loading jobs")
+    cur = get_db().cursor()
+    cur.execute("SELECT * FROM timer")
+    rows = cur.fetchall()
+    for timer in rows:
+        add_job(timer)
 
 def run_schedule():
     while 1:
