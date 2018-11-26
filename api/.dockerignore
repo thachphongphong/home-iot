@@ -1,7 +1,7 @@
-venv
+../venv
 .idea
 .gitignore
-Dockerfile
+../Dockerfile
 README.MD
 iot.service
 home-iot.iml

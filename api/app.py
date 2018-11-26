@@ -4,8 +4,6 @@ A small Test application to show how to use Flask-MQTT.
 import logging
 import eventlet
 import json
-import schedule
-import time
 import os.path
 import configparser
 import sqlite3 as sql
@@ -13,13 +11,9 @@ from flask import Flask, render_template, g, request
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
-from threading import Thread
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "iot.db")
-
-# Blueprints
-from api.api import api
+DATABASE = os.path.join(BASE_DIR, "../iot.db")
 
 eventlet.monkey_patch()
 
@@ -30,9 +24,6 @@ app.logger.handlers.extend(iot_error_logger.handlers)
 app.logger.setLevel(logging.DEBUG)
 app.logger.debug('START IOT API')
 
-app.register_blueprint(api)
-
-# app.config['SECRET'] = 'my secret key'
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -47,6 +38,7 @@ app.config['MQTT_TLS_ENABLED'] = False
 
 devices = ["sonoff1","sonoff2","sonoff-valve"]
 status = ["off","off","off"]
+schedule_topic = "topic/schedule"
 
 mqtt = Mqtt(app)
 socketio = SocketIO(app)
@@ -157,9 +149,6 @@ def handle_mqtt_message(client, userdata, message):
 def start():
     return 'IOT HOME PROJECT!'
 
-def timer_job():
-    app.logger.debug("I'm working...")
-
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
 def add_to_schedule(devId, timer=1):
     if checkDevice(devId):
@@ -172,9 +161,11 @@ def add_to_schedule(devId, timer=1):
             if len(row)==0:
                 app.logger.debug("ADD NEW %s", data)
                 cur.execute("INSERT INTO timer VALUES(?,?,?,?,?)", (devId, timer, data['period'], data['at'], data['action']))
+                mqtt.publish(schedule_topic, "ADD NEW", 2)
             else:
                 app.logger.debug("REPLACE DATA %s", data)
                 cur.execute("UPDATE timer SET period=?, at=?, action=? WHERE devId=? AND timer=?", (data['period'], data['at'], data['action'], devId, timer))
+                mqtt.publish(schedule_topic, "REPLACE DATA", 2)
             db.commit()
             app.logger.debug("Record successfully added %s", timer)
         except sql.Error as e:
@@ -185,55 +176,33 @@ def add_to_schedule(devId, timer=1):
             app.logger.debug("Exception in _query: %s" % e)
         # finally:
         #     db.close()
-        load_job()
         return "OK"
     else:
         return "Device not found"
 
-def add_job(timer):
-    app.logger.debug("Add job: %s  %s  %s  %s  %s" % (timer[0], timer[1], timer[2], timer[3], timer[4]))
-    # job = schedule.every()
-    # if 1 == 1:
-    #     if period == 'day':
-    #         job = job.day
-    #     elif period == 'hour':
-    #         job = job.hour
-    #     elif period == 'minute':
-    #         job = job.minute
-    #     elif period == 'second':
-    #         job = job.second
-    #     else:
-    #         return "Invalid period " + period
-    # else:
-    #     if period == 'day':
-    #         job = job.days
-    #     elif period == 'hour':
-    #         job = job.hours
-    #     elif period == 'minute':
-    #         job = job.minutes
-    #     elif period == 'second':
-    #         job = job.seconds
-    #     else:
-    #         return "Invalid period " + period
-    # job.do(timer_job)
-
-def update_job():
-    app.logger.debug("Update job")
-
-def load_job():
-    app.logger.debug("Loading jobs")
-    cur = get_db().cursor()
-    cur.execute("SELECT * FROM timer")
-    rows = cur.fetchall()
-    for timer in rows:
-        add_job(timer)
-
-def run_schedule():
-    while 1:
-        schedule.run_pending()
-        time.sleep(1)
-
+@app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['DELETE'])
+def delete_schedule(devId, timer=1):
+    if checkDevice(devId):
+        try:
+            db = get_db()
+            cur = get_db.cursor()
+            cur.execute("SELECT * FROM timer WHERE devId=? AND timer=?", (devId,timer))
+            row = cur.fetchall()
+            if len(row)==0:
+                app.logger.debug("DELETE TIMER %s %s" % (devId, timer))
+                cur.execute("DELETE FROM timer devId=? AND timer=?", (devId,timer))
+                db.commit()
+                app.logger.debug("Record successfully deleted %s", timer)
+        except sql.Error as e:
+            db.rollback()
+            app.logger.debug("Database error: %s" % e)
+        except Exception as e:
+            db.rollback()
+            app.logger.debug("Exception in _query: %s" % e)
+        # finally:
+        #     db.close()
+        return "OK"
+    else:
+        return "Device not found"
 if __name__ == '__main__':
-    t = Thread(target=run_schedule)
-    t.start()
     socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
