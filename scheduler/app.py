@@ -1,7 +1,7 @@
 # App will load job from db and add to schedule
 # First iml: will reload every day to refresh job which CRUD from api
 # Advance: will listen mqtt to modify current job
-
+import json
 import time
 import os
 import sqlite3 as sql
@@ -28,9 +28,6 @@ class IOTJob:
         if level > 0:
             print("%s - %s" % (tstr, msg))
 
-    def iotjob(self, devid, action):
-        self.log_msg("Add job: '%s' '%s" % (devid, action))
-
     def loadjobs(self):
         self.log_msg("Load JOBS from DB ...")
         cur = self.db.cursor()
@@ -41,21 +38,7 @@ class IOTJob:
         return True
 
     def schedulejob(self, devid, timer, period, at, action):
-        job = self.schedule.every()
-        if period == 'day':
-            job = job.day
-        elif period == 'hour':
-            job = job.hour
-        elif period == 'minute':
-            job = job.minute
-        elif period == 'second':
-            job = job.second
-        else:
-            return "Invalid period " + period
-        if at != '':
-            job = job.at(at)
-        tag = '-'.join([devid, str(timer)])
-        job.do(self.iotjob, devid, action).tag(tag)
+        createjob(devid, timer, period, at, action)
         return "OK"
 
     def run_schedule(self):
@@ -76,6 +59,27 @@ class IOTJob:
             rc = 2
         return rc
 
+def iotjob(devid, action):
+    print("Add job: '%s' '%s" % (devid, action))
+
+def createjob(devid, timer, period, at, action):
+    job = schedule.every()
+    if period == 'day':
+        job = job.day
+    elif period == 'hour':
+        job = job.hour
+    elif period == 'minute':
+        job = job.minute
+    elif period == 'second':
+        job = job.second
+    else:
+        return "Invalid period " + period
+    if at != '':
+        job = job.at(at)
+    tag = '-'.join([devid, str(timer)])
+    job.do(iotjob, devid, action).tag(tag)
+    return job
+
 def getdb():
     try:
         db = sql.connect(DATABASE)
@@ -94,8 +98,20 @@ def on_connect(client, userdata, flags, rc):
         print("Connection failed")
 
 def on_message(client, userdata, msg):
-    # if msg.payload.decode() == "Hello world!":
-    print(msg.payload.decode())
+    data = json.loads(msg.payload.decode())
+    if not data is None:
+        if data["type"] == "ADD":
+            print("CREATE A JOB FROM API")
+            createjob(data['devId'], data['timer'],data['period'], data['at'], data['action'])
+        elif data["type"] == "REPLACE":
+            print("REPLACE A JOB FROM API")
+            tag = '-'.join([data['devId'], str(data['timer'])])
+            schedule.clear(tag)
+            createjob(data['devId'], data['timer'],data['period'], data['at'], data['action'])
+        else:
+            print("REMOVE A JOB FROM API")
+            tag = '-'.join([data['devId'], str(data['timer'])])
+            schedule.clear(tag)
 
 def main(argv=None):
     debug =1
@@ -122,6 +138,6 @@ if __name__ == "__main__":
             main()
 
     except KeyboardInterrupt:
-        print "exiting"
+        print("exiting")
         client.disconnect()
         client.loop_stop()

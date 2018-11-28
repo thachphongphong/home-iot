@@ -2,6 +2,7 @@
 A small Test application to show how to use Flask-MQTT.
 """
 import logging
+import time
 import eventlet
 import json
 import os.path
@@ -11,6 +12,8 @@ from flask import Flask, render_template, g, request
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
+from pytz import timezone
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "../iot.db")
@@ -50,6 +53,11 @@ def checkDevice(d):
     else:
         return False
 
+def toUtc(at):
+    datetime_obj = datetime.strptime(at, "%H:%M")
+    datetime_obj_pacific = datetime_obj.replace(tzinfo=timezone('Asia/Ho_Chi_Minh'))
+    datetime_obj_utc=datetime_obj_pacific.astimezone(timezone('UTC'))
+    return datetime_obj_utc
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -160,12 +168,18 @@ def add_to_schedule(devId, timer=1):
             row = cur.fetchall()
             if len(row)==0:
                 app.logger.debug("ADD NEW %s", data)
-                cur.execute("INSERT INTO timer VALUES(?,?,?,?,?)", (devId, timer, data['period'], data['at'], data['action']))
-                mqtt.publish(schedule_topic, "ADD NEW", 2)
+                cur.execute("INSERT INTO timer VALUES(?,?,?,?,?)", (devId, timer, data['period'], toUtc(data['at']), data['action']))
+                data["type"] = "ADD"
+                data["devId"] = devId
+                data["timer"] = timer
+                mqtt.publish(schedule_topic, json.dumps(data), 2)
             else:
                 app.logger.debug("REPLACE DATA %s", data)
-                cur.execute("UPDATE timer SET period=?, at=?, action=? WHERE devId=? AND timer=?", (data['period'], data['at'], data['action'], devId, timer))
-                mqtt.publish(schedule_topic, "REPLACE DATA", 2)
+                cur.execute("UPDATE timer SET period=?, at=?, action=? WHERE devId=? AND timer=?", (data['period'], toUtc(data['at']), data['action'], devId, timer))
+                data["type"] = "REPLACE"
+                data["devId"] = devId
+                data["timer"] = timer
+                mqtt.publish(schedule_topic, json.dumps(data), 2)
             db.commit()
             app.logger.debug("Record successfully added %s", timer)
         except sql.Error as e:
@@ -185,14 +199,17 @@ def delete_schedule(devId, timer=1):
     if checkDevice(devId):
         try:
             db = get_db()
-            cur = get_db.cursor()
+            cur = db.cursor()
             cur.execute("SELECT * FROM timer WHERE devId=? AND timer=?", (devId,timer))
-            row = cur.fetchall()
-            if len(row)==0:
+            row = cur.fetchone()
+            if not row is None:
                 app.logger.debug("DELETE TIMER %s %s" % (devId, timer))
-                cur.execute("DELETE FROM timer devId=? AND timer=?", (devId,timer))
+                cur.execute("DELETE FROM timer WHERE devId=? AND timer=?", (devId,timer))
                 db.commit()
                 app.logger.debug("Record successfully deleted %s", timer)
+                data = {"devId": row[0], "timer": row[1], "period": row[2], "at": toUtc(row[3]), "action": row[4]}
+                data["type"] = "REMOVE"
+                mqtt.publish(schedule_topic, json.dumps(data), 2)
         except sql.Error as e:
             db.rollback()
             app.logger.debug("Database error: %s" % e)
