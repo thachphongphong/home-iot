@@ -28,5 +28,4 @@
 -  docker run -it --rm -p 5000:5000 -v {{PATH}}/home-iot/api:/home/iot  
     -v {{PATH}}/home-iot/iot.db:/home/iot/iot.db iot-api:latest
 ### api
-- docker run -it --rm  -v {{PATH}}/home-iot/scheduler:/home/iot  
-    -v {{PATH}}/home-iot/iot.db:/home/iot/iot.db iot-scheduler:latest
+- docker run --net=host --name=scheduler -v /home/ldt/iot/home-iot/scheduler:/home/iot  -v /home/ldt/iot/home-iot/iot.db:/home/iot/iot.db -d iot-scheduler
