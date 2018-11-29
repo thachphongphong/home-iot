@@ -10,7 +10,7 @@ import configparser
 import paho.mqtt.client as mqtt
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "../iot.db")
+DATABASE = os.path.join(BASE_DIR, "iot.db")
 
 config = configparser.ConfigParser()
 config.read('config.ini')

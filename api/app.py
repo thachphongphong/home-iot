@@ -18,7 +18,7 @@ from pytz import timezone
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "../iot.db")
+DATABASE = os.path.join(BASE_DIR, "iot.db")
 
 eventlet.monkey_patch()
 

@@ -21,3 +21,12 @@
 
 ## debug
 - gunicorn --worker-class eventlet --log-level debug --bind 0.0.0.0:500 app
+
+## docker
+
+### api
+-  docker run -it --rm -p 5000:5000 -v {{PATH}}/home-iot/api:/home/iot  
+    -v {{PATH}}/home-iot/iot.db:/home/iot/iot.db iot-api:latest
+### api
+- docker run -it --rm  -v {{PATH}}/home-iot/scheduler:/home/iot  
+    -v {{PATH}}/home-iot/iot.db:/home/iot/iot.db iot-scheduler:latest
