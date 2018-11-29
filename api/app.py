@@ -8,6 +8,8 @@ import json
 import os.path
 import configparser
 import sqlite3 as sql
+
+import pytz
 from flask import Flask, render_template, g, request
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
@@ -54,10 +56,13 @@ def checkDevice(d):
         return False
 
 def toUtc(at):
-    datetime_obj = datetime.strptime(at, "%H:%M")
-    datetime_obj_pacific = datetime_obj.replace(tzinfo=timezone('Asia/Ho_Chi_Minh'))
-    datetime_obj_utc=datetime_obj_pacific.astimezone(timezone('UTC'))
-    return datetime_obj_utc
+    naive = datetime.now()
+    la_tz = pytz.timezone("Asia/Ho_Chi_Minh")
+    at = datetime.strptime(at, "%H:%M")
+
+    with_tz = la_tz.localize(naive.replace(hour=at.hour, minute=at.minute))
+    converted_to_utc = with_tz.astimezone(pytz.utc)
+    return converted_to_utc.strftime("%H:%M")
 
 def get_db():
     db = getattr(g, '_database', None)

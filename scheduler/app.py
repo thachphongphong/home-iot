@@ -59,8 +59,15 @@ class IOTJob:
             rc = 2
         return rc
 
+def app_msg(msg):
+    tstr = time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(time.time()))
+    print("%s - %s" % (tstr, msg))
+
 def iotjob(devid, action):
-    print("Add job: '%s' '%s" % (devid, action))
+    topic = "cmnd/{}/power".format(devid)
+    status = 'off' if action == 0 else 'on' if action == 1 else 'toggle'
+    app_msg("publish job: '%s' '%s" % (topic, status))
+    # client.publish(topic, status, 2)
 
 def createjob(devid, timer, period, at, action):
     job = schedule.every()
@@ -85,7 +92,7 @@ def getdb():
         db = sql.connect(DATABASE)
         return db
     except sql.Error as e:
-        print(e)
+        app_msg(e)
     return None
 
 def on_connect(client, userdata, flags, rc):
@@ -95,21 +102,21 @@ def on_connect(client, userdata, flags, rc):
         Connected = True                #Signal connection
         client.subscribe("topic/schedule", 2)
     else:
-        print("Connection failed")
+        app_msg("Connection failed")
 
 def on_message(client, userdata, msg):
     data = json.loads(msg.payload.decode())
     if not data is None:
         if data["type"] == "ADD":
-            print("CREATE A JOB FROM API")
+            app_msg("CREATE A JOB FROM API")
             createjob(data['devId'], data['timer'],data['period'], data['at'], data['action'])
         elif data["type"] == "REPLACE":
-            print("REPLACE A JOB FROM API")
+            app_msg("REPLACE A JOB FROM API")
             tag = '-'.join([data['devId'], str(data['timer'])])
             schedule.clear(tag)
             createjob(data['devId'], data['timer'],data['period'], data['at'], data['action'])
         else:
-            print("REMOVE A JOB FROM API")
+            app_msg("REMOVE A JOB FROM API")
             tag = '-'.join([data['devId'], str(data['timer'])])
             schedule.clear(tag)
 
@@ -125,7 +132,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 
 client.username_pw_set(config['DEFAULT']['MQTT_USERNAME'], config['DEFAULT']['MQTT_PASSWORD'])
-client.connect(config['DEFAULT']['MQTT_BROKER_URL'] ,1883,60)
+client.connect(config['DEFAULT']['MQTT_BROKER_URL'] ,1883, 60)
 
 client.loop_start()
 
@@ -138,6 +145,6 @@ if __name__ == "__main__":
             main()
 
     except KeyboardInterrupt:
-        print("exiting")
+        app_msg("exiting")
         client.disconnect()
         client.loop_stop()

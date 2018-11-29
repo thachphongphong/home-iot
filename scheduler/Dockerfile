@@ -1,4 +1,4 @@
-FROM python:3.6-stretch
+FROM python:3.6-alpine
 
 RUN mkdir -p /home/iot
 WORKDIR /home/iot
