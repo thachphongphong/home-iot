@@ -167,20 +167,21 @@ def add_to_schedule(devId, timer=1):
     if checkDevice(devId):
         try:
             data = request.json
+            data['at'] = toUtc(data['at'])
             db = get_db()
             cur = db.cursor()
             cur.execute("SELECT * FROM timer WHERE devId=? AND timer=?", (devId,timer))
             row = cur.fetchall()
             if len(row)==0:
                 app.logger.debug("ADD NEW %s", data)
-                cur.execute("INSERT INTO timer VALUES(?,?,?,?,?)", (devId, timer, data['period'], toUtc(data['at']), data['action']))
+                cur.execute("INSERT INTO timer VALUES(?,?,?,?,?)", (devId, timer, data['period'], data['at'], data['action']))
                 data["type"] = "ADD"
                 data["devId"] = devId
                 data["timer"] = timer
                 mqtt.publish(schedule_topic, json.dumps(data), 2)
             else:
                 app.logger.debug("REPLACE DATA %s", data)
-                cur.execute("UPDATE timer SET period=?, at=?, action=? WHERE devId=? AND timer=?", (data['period'], toUtc(data['at']), data['action'], devId, timer))
+                cur.execute("UPDATE timer SET period=?, at=?, action=? WHERE devId=? AND timer=?", (data['period'], data['at'], data['action'], devId, timer))
                 data["type"] = "REPLACE"
                 data["devId"] = devId
                 data["timer"] = timer
