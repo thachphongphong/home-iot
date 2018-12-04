@@ -137,12 +137,12 @@ def handle_mqtt_message(client, userdata, message):
         payload=message.payload.decode(),
         qos=message.qos,
     )
-#    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
+    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
     global status
     for idx, id in enumerate(devices):
         topic = "stat/"+id+"/POWER"
         if(topic == message.topic):
-            app.logger.debug("on_message %s: %s: %s " % (idx, topic, message.payload.decode()))
+            app.logger.debug("topic status change %s: %s: %s " % (idx, topic, message.payload.decode()))
             status[idx] =  message.payload.decode().lower()
             socketio.emit('mqtt_message')
 
