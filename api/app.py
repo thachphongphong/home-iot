@@ -151,12 +151,11 @@ def handle_mqtt_message(client, userdata, message):
 #     # print(level, buf)
 #     pass
 
-# @mqtt.on_connect()
-# def handle_connect(client, userdata, flags, rc):
-#     #for id in devices:
-#        # app.logger.debug("Subscribe device topic %s" % id)
-#        # mqtt.subscribe("cmnd/"+id+"/power", 0)
-#        # mqtt.subscribe("stat/"+id+"/POWER", 0)
+@mqtt.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    for id in devices:
+       app.logger.debug("Subscribe device topic %s" % id)
+       mqtt.subscribe("stat/"+id+"/POWER", 0)
 
 @app.route('/home')
 def start():
