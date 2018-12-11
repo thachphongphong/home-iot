@@ -2,7 +2,6 @@
 A small Test application to show how to use Flask-MQTT.
 """
 import logging
-import time
 import eventlet
 import json
 import os.path
@@ -10,11 +9,10 @@ import configparser
 import sqlite3 as sql
 
 import pytz
-from flask import Flask, render_template, g, request
+from flask import Flask, render_template, g, request, abort
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
-from pytz import timezone
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +47,12 @@ mqtt = Mqtt(app)
 socketio = SocketIO(app)
 bootstrap = Bootstrap(app)
 
+def checkToken(request):
+    token = request.headers.get('Authorization')
+    if(token == 'Bearer hWd3uNMVpjaRAbPs9Nt3'):
+        return True
+    return False
+
 def checkDevice(d):
     if d in devices:
         return True
@@ -63,6 +67,17 @@ def toUtc(at):
     with_tz = la_tz.localize(naive.replace(hour=at.hour, minute=at.minute))
     converted_to_utc = with_tz.astimezone(pytz.utc)
     return converted_to_utc.strftime("%H:%M")
+
+@app.template_filter()
+def toLocal(at):
+    naive = datetime.now()
+    utc_tz = pytz.timezone("UTC")
+    at = datetime.strptime(at, "%H:%M")
+
+    with_tz = utc_tz.localize(naive.replace(hour=at.hour, minute=at.minute))
+    converted_to_lc = with_tz.astimezone(pytz.timezone("Asia/Ho_Chi_Minh"))
+    return converted_to_lc.strftime("%H:%M")
+app.jinja_env.filters['tolocal'] = toLocal
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -102,6 +117,9 @@ def index():
 
 @app.route('/api/v1.0/<devId>', methods=['GET'])
 def get_light_status(devId):
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
     for idx, id in enumerate(devices):
         app.logger.debug("ID : %s"  % id)
         if(id == devId):
@@ -111,6 +129,9 @@ def get_light_status(devId):
 
 @app.route('/api/v1.0/<devId>', methods=['POST'])
 def post_light_status(devId):
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
     for idx, id in enumerate(devices):
         if(id == devId):
             global status
@@ -127,6 +148,9 @@ def post_light_status(devId):
 
 @app.route('/api/v1.0/status', methods=['GET'])
 def get_all_status():
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
     global status
     return json.dumps(status)
 
@@ -163,6 +187,9 @@ def start():
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
 def add_to_schedule(devId, timer=1):
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
     if checkDevice(devId):
         try:
             data = request.json
@@ -201,6 +228,9 @@ def add_to_schedule(devId, timer=1):
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['DELETE'])
 def delete_schedule(devId, timer=1):
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
     if checkDevice(devId):
         try:
             db = get_db()

@@ -57,7 +57,10 @@
     function loadTopic(id) {
         $.get("/api/v1.0/"+id, function(data, status){
             var $textarea = $('#subscribe_messages');
-            var text = 'Device: ' + getDevName(id) + '     Status: ' + data;
+            var o = {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'};
+            var dt = new Date($.now());
+            var text = dt.toLocaleDateString('en-US', o) + '- Device: ' + getDevName(id) + '  Status: ' + data;
+            if(id == $('#topic').val())
             $textarea.val($textarea.val() + text + '\n');
         });
     }
@@ -65,6 +68,11 @@
     function getDevName(id) {
        return $("#topic option[value='"+id+"']").text();
     }
+
+
+    $.ajaxSetup({
+        headers: { 'Authorization': 'Bearer hWd3uNMVpjaRAbPs9Nt3' }
+    });
 </script>
 {% endblock %}
 
@@ -214,7 +222,7 @@
                                 <div class="form-group">
                                     <label class="control-label col-xs-4">Messages:</label>
                                     <div class="col-xs-8">
-                                        <textarea id="timer" class="form-control" rows=10 >{% for timer in timers %}{{timer[0]}} - {{timer[1]}} - {{timer[2]}} - {{timer[3]}} - {% if timer[4] == 0 %}OFF{% elif timer[4] == 1 %}ON{% else %}TOGGLE{% endif %}&#13;&#10;{% endfor %}</textarea>
+                                        <textarea id="timer" class="form-control" rows=10 >{% for timer in timers %}{{timer[0]}} - {{timer[1]}} - {{timer[2]}} - {{ timer[3] | tolocal }} - {% if timer[4] == 0 %}OFF{% elif timer[4] == 1 %}ON{% else %}TOGGLE{% endif %}&#13;&#10;{% endfor %}</textarea>
                                     </div>
                                 </div>
                             </div>
