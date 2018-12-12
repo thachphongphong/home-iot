@@ -181,9 +181,9 @@ def handle_connect(client, userdata, flags, rc):
        app.logger.debug("Subscribe device topic %s" % id)
        mqtt.subscribe("stat/"+id+"/POWER", 0)
 
-@app.route('/home')
+@app.route('/')
 def start():
-    return 'IOT HOME PROJECT!'
+    return render_template('home.html')
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
 def add_to_schedule(devId, timer=1):
