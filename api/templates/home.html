@@ -658,8 +658,8 @@
 					if (this.diff > 250) {
 
 						this.last = t.timeStamp;
-
-						iot.switchSingle(this.id, this.checked);
+                        api.switchDevice(this.id, this.checked);
+						{#iot.switchSingle(this.id, this.checked);#}
 
 					} else {
 						return false;
@@ -669,8 +669,8 @@
 
 					// First attempt on this switch element
 					this.last = t.timeStamp;
-
-					iot.switchSingle(this.id, this.checked);
+                    api.switchDevice(this.id, this.checked);
+					{#iot.switchSingle(this.id, this.checked);#}
 
 				}
 			});

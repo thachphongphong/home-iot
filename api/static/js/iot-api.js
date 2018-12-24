@@ -46,19 +46,10 @@ var api;
         },
         switchDevice: function (id, status) {
             console.log('Api begin post status');
-            $.post("/api/v1.0/" + conver, function(data){
+            $.post("/api/v1.0/" + api.convertDevId(id), function(data){
                 if(data){
-                    data = JSON.parse(data);
-                    var d = JSON.parse(localStorage.getItem("switchValues")) || {};
-                    if(d['switch-light-6'] != (data[1] == 'on')){
-                        iot.switchSingle('switch-light-6', (data[1] == 'on'));
-                    }
-                    if(d['switch-light-7'] != (data[0] == 'on')){
-                        iot.switchSingle('switch-light-7', (data[0] == 'on'));
-                    }
-                    if(d['switch-light-8'] != (data[2] == 'on')){
-                        iot.switchSingle('switch-light-8', (data[2] == 'on'));
-                    }
+                    // var d = JSON.parse(localStorage.getItem("switchValues")) || {};
+                    iot.switchSingle(id, data == 'on')
                 }
             });
         },
