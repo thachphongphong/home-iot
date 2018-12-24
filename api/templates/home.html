@@ -126,7 +126,7 @@
 						<div class="dropdown-menu dropdown-menu-right">
 							<a class="dropdown-item" href="profile.html">Profile</a>
 							<div class="dropdown-divider"></div>
-							<a class="dropdown-item" href="login.html">Logout</a>
+							<a class="dropdown-item" href="/logout">Logout</a>
 						</div>
 					</div>
 					<div class="nav-item d-lg-none">
@@ -146,27 +146,27 @@
 				<div id="sidebar" class="sidebar-offcanvas">
 					<ul class="nav flex-column nav-sidebar">
 						<li class="nav-item active">
-							<a class="nav-link active" href="index-2.html">
+							<a class="nav-link active" href="#">
 								<svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#home"/></svg> Home
 							</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="lights.html">
+							<a class="nav-link disabled" href="#">
 								<svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#bulb-eco"/></svg> Lights
 							</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="cameras.html">
+							<a class="nav-link disabled" href="#">
 								<svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#camera"/></svg> Cameras
 							</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="appliances.html">
+							<a class="nav-link disabled" href="#">
 								<svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#appliances"/></svg> Appliances
 							</a>
 						</li>
                         <li class="nav-item">
-                          <a class="nav-link" href="climate.html">
+                          <a class="nav-link disabled" href="#">
                             <svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#thermometer"/></svg> <span>Climate</span>
                           </a>
                         </li>
@@ -347,13 +347,13 @@
 											<use class="glow" fill="url(#radial-glow)" xlink:href="/static/images/icons-sprite.svg#glow"/>
 											<use xlink:href="/static/images/icons-sprite.svg#bulb-eco"/>
 										</svg>
-										<h5>Pool</h5>
+										<h5>Valve</h5>
 										<label class="switch ml-auto">
 											<input type="checkbox" id="switch-light-8">
 										</label>
 									</div>
 								</div>
-								<div class="card" data-unit="switch-light-9">
+								{#<div class="card" data-unit="switch-light-9">
 									<div class="card-body d-flex">
 										<svg class="icon-sprite">
 											<use class="glow" fill="url(#radial-glow)" xlink:href="/static/images/icons-sprite.svg#glow"/>
@@ -364,7 +364,7 @@
 											<input type="checkbox" id="switch-light-9">
 										</label>
 									</div>
-								</div>
+								</div>#}
 								<!-- Exterior lights  END -->
 							</div>
 							<div class="col-sm-12 col-md-6 col-xl-4">
@@ -560,9 +560,15 @@
 	<!-- Basic theme functionality (arming, garage doors, switches ...) - using jQuery -->
 	<script src="/static/js/iot-functions.min.js"></script>
 
+    <!-- Basic api - using jQuery -->
+    <script src="/static/js/iot-api.js"></script>
+
+    <!-- SocketIO bundle - using jQuery -->
+    <script src="/static/js/socket.io.min.js"></script>
+
 	<script>
 		$(document).ready(function() {
-
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
 
 			// Get checkbox statuses from localStorage if available (IE)
 			if (localStorage) {
@@ -729,6 +735,12 @@
 
 			});
 
+            // Update status from api
+            api.getStatus();
+
+            socket.on('mqtt_message', function(data) {
+                api.getStatus();
+            })
 		});
 
 		// Apply necessary changes, functionality when content is loaded

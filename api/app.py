@@ -9,7 +9,7 @@ import configparser
 import sqlite3 as sql
 
 import pytz
-from flask import Flask, render_template, g, request, abort
+from flask import Flask, render_template, g, request, abort, session, redirect, url_for
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
@@ -21,6 +21,7 @@ DATABASE = os.path.join(BASE_DIR, "iot.db")
 eventlet.monkey_patch()
 
 app = Flask(__name__)
+app.secret_key = os.urandom(12)
 
 iot_error_logger = logging.getLogger('iot.error')
 app.logger.handlers.extend(iot_error_logger.handlers)
@@ -47,6 +48,46 @@ mqtt = Mqtt(app)
 socketio = SocketIO(app)
 bootstrap = Bootstrap(app)
 
+## MQTT ##
+@mqtt.on_message()
+def handle_mqtt_message(client, userdata, message):
+    data = dict(
+        topic=message.topic,
+        payload=message.payload.decode(),
+        qos=message.qos,
+    )
+    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
+    global status
+    for idx, id in enumerate(devices):
+        topic = "stat/"+id+"/POWER"
+        if(topic == message.topic):
+            app.logger.debug("topic status change %s: %s: %s " % (idx, topic, message.payload.decode()))
+            status[idx] =  message.payload.decode().lower()
+            socketio.emit('mqtt_message')
+
+# @mqtt.on_log()
+# def handle_logging(client, userdata, level, buf):
+#     # print(level, buf)
+#     pass
+
+# @socketio.on('publish')
+# def handle_publish(json_str):
+#     data = json.loads(json_str)
+#     if checkTopic(data['topic']):
+#         mqtt.publish(data['topic'], data['message'], data['qos'])
+
+
+
+
+# @socketio.on('subscribe')
+# def handle_subscribe(json_str):
+#     print("xxxxxxxxxx", json_str)
+#     data = json.loads(json_str)
+#     if checkTopic(data['topic']):
+#         mqtt.subscribe(data['topic'], data['qos'])
+
+## FUNCTION ##
+
 def checkToken(request):
     token = request.headers.get('Authorization')
     if(token == 'Bearer hWd3uNMVpjaRAbPs9Nt3'):
@@ -68,6 +109,63 @@ def toUtc(at):
     converted_to_utc = with_tz.astimezone(pytz.utc)
     return converted_to_utc.strftime("%H:%M")
 
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sql.connect(DATABASE)
+    return db
+
+def checkUser(username, password):
+    app.logger.debug("Login with %s - %s" % (username,password))
+    cur = get_db().cursor()
+    cur = cur.execute("SELECT * FROM user WHERE username=? AND password=?", (username,password))
+    data = cur.fetchone()
+    if data is None:
+        return False
+    return True
+
+## FRONT END ##
+@app.route('/')
+def start():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    else:
+        return render_template('home.html')
+
+@app.route('/iot')
+def index():
+    u = datetime.utcnow()
+    u = u.replace(tzinfo=pytz.utc)
+
+    timeStr = u.astimezone(pytz.timezone("Europe/Amsterdam")).strftime("%Y-%m-%dT%H%%3A%M")[:-1]+"0"
+    print(timeStr)
+    cur = get_db().cursor()
+    cur = cur.execute("select * from timer")
+    rows = cur.fetchall()
+    return render_template('index.html', timers=rows)
+
+@app.route('/login',methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        username = str(request.form.get('username'))
+        password = str(request.form.get('password'))
+        if checkUser(username, password):
+            app.logger.debug("Login with %s", username)
+            session['logged_in'] = True
+            return redirect(url_for('start'))
+        else:
+            app.logger.debug("Login is invalid")
+            error = 'Wrong username or password!'
+            return render_template('login.html', error = error)
+    else:
+        return render_template('login.html')
+
+@app.route("/logout")
+def logout():
+    session['logged_in'] = False
+    return redirect(url_for('login'))
+
 @app.template_filter()
 def toLocal(at):
     naive = datetime.now()
@@ -79,41 +177,13 @@ def toLocal(at):
     return converted_to_lc.strftime("%H:%M")
 app.jinja_env.filters['tolocal'] = toLocal
 
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sql.connect(DATABASE)
-    return db
-
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
-@app.route('/iot')
-def index():
-    cur = get_db().cursor()
-    cur = cur.execute("select * from timer")
-    rows = cur.fetchall()
-    return render_template('index.html', timers=rows)
-
-
-# @socketio.on('publish')
-# def handle_publish(json_str):
-#     data = json.loads(json_str)
-#     if checkTopic(data['topic']):
-#         mqtt.publish(data['topic'], data['message'], data['qos'])
-
-
-
-
-# @socketio.on('subscribe')
-# def handle_subscribe(json_str):
-#     print("xxxxxxxxxx", json_str)
-#     data = json.loads(json_str)
-#     if checkTopic(data['topic']):
-#         mqtt.subscribe(data['topic'], data['qos'])
+## API ##
 
 @app.route('/api/v1.0/<devId>', methods=['GET'])
 def get_light_status(devId):
@@ -154,36 +224,12 @@ def get_all_status():
     global status
     return json.dumps(status)
 
-@mqtt.on_message()
-def handle_mqtt_message(client, userdata, message):
-    data = dict(
-        topic=message.topic,
-        payload=message.payload.decode(),
-        qos=message.qos,
-    )
-    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
-    global status
-    for idx, id in enumerate(devices):
-        topic = "stat/"+id+"/POWER"
-        if(topic == message.topic):
-            app.logger.debug("topic status change %s: %s: %s " % (idx, topic, message.payload.decode()))
-            status[idx] =  message.payload.decode().lower()
-            socketio.emit('mqtt_message')
-
-# @mqtt.on_log()
-# def handle_logging(client, userdata, level, buf):
-#     # print(level, buf)
-#     pass
-
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
     for id in devices:
        app.logger.debug("Subscribe device topic %s" % id)
        mqtt.subscribe("stat/"+id+"/POWER", 0)
 
-@app.route('/')
-def start():
-    return render_template('home.html')
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
 def add_to_schedule(devId, timer=1):

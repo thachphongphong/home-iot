@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<!-- Mirrored from symbiot4.creatingo.com/login.html by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 11 Dec 2018 03:52:51 GMT -->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+
+  <title>IOTHOME Login page</title>
+
+    <!-- Bootstrap core CSS with custom theme variables + Additional theme styles -->
+    <link href="/static/css/iot-theme-bundle.min.css" rel="stylesheet">
+
+</head>
+
+<body class="pt-0">
+  <div id="login" class="d-flex align-items-center pb-4">
+    <div class="row mx-auto" style="width:100%;max-width:24rem;">
+      <div class="col-12 mb-2 text-center">
+          <object type="image/svg+xml" data="/static/images/home.svg" width="140" height="20" alt="IOTHOME" class="mx-auto">
+              Your browser does not support SVG.
+          </object>
+      </div>
+      <div class="col-12">
+        <!-- Login form START -->
+        <div class="card px-4 pt-2">
+          <form action="/login" method="POST" class="p-2">
+            <div class="form-group row">
+              <label for="user-name" class="col-12 col-form-label">Username</label>
+              <div class="col-12">
+                <input class="form-control custom-focus" type="text" value="ldt" name="username">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="user-password" class="col-12 col-form-label">Password</label>
+              <div class="col-12">
+                <input class="form-control custom-focus" type="password" value="123" name="password">
+              </div>
+            </div>
+            <div class="form-group row">
+                {% if error %}
+                    <div class="col-12 mt-3 mb-2 text-center">
+                        <small class="text-danger">
+                            {{ error }}
+                        </small>
+                    </div>
+                {% endif %}
+                <div class="col-12 mt-3 mb-2 text-center">
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+        <!-- Login form END -->
+      </div>
+    </div>
+  </div>
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <!-- jQuery -->
+  <script src="/static/js/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	
+  <!-- Bootstrap bundle -->
+  <script src="/static/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+
+<!-- Mirrored from symbiot4.creatingo.com/login.html by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 11 Dec 2018 03:52:51 GMT -->
+</html>
