@@ -53,6 +53,15 @@ var api;
                 }
             });
         },
+        switchGroup: function (id, status) {
+            console.log('Api begin post status');
+            $.post("/api/v1.0/" + api.convertDevId(id), function(data){
+                if(data){
+                    // var d = JSON.parse(localStorage.getItem("switchValues")) || {};
+                    iot.switchSingle(id, data == 'on')
+                }
+            });
+        },
         convertDevId: function (id) {
             switch (id) {
                 //Exterior

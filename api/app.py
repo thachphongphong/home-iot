@@ -132,6 +132,13 @@ def start():
     else:
         return render_template('home.html')
 
+@app.route('/lights')
+def lights():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    else:
+        return render_template('lights.html')
+
 @app.route('/iot')
 def index():
     u = datetime.utcnow()

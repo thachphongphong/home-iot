@@ -151,7 +151,7 @@
 							</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link disabled" href="#">
+							<a class="nav-link" href="/lights">
 								<svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#bulb-eco"/></svg> Lights
 							</a>
 						</li>
@@ -191,7 +191,8 @@
 								</div>
 							</div>
 						</div>
-						<div class="row">
+                        <!-- Show when begin IMPL -->
+						<div class="row d-none">
 							<div class="col-sm-12 col-md-6">
 								<!-- Security system START -->
 								<div class="card lock" data-unit="switch-house-lock">
@@ -244,7 +245,8 @@
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-sm-12 col-md-6 col-xl-4">
+                            <!-- Show when begin IMPL -->
+							<div class="col-sm-12 col-md-6 col-xl-4 d-none">
 								<!-- Interior lights  START -->
 								<div class="card" data-unit-group="switch-lights">
 									<div class="card-body">
@@ -367,7 +369,7 @@
 								</div>#}
 								<!-- Exterior lights  END -->
 							</div>
-							<div class="col-sm-12 col-md-6 col-xl-4">
+							<div class="col-sm-12 col-md-6 col-xl-4 d-none">
 								<!-- Appliances  START -->
 								<div class="card">
 									<div class="card-body">
@@ -424,7 +426,7 @@
 								<!-- Appliances  END -->
 							</div>
 						</div>
-						<div class="row">
+						<div class="row d-none">
 							<div class="col-sm-12 col-md-6">
 								<!-- Camera 1  START -->
 								<div class="card active" data-unit="switch-camera-1">
@@ -527,7 +529,7 @@
 	<!-- FAB button - bottom right on large screens -->
 	<button id="info-toggler" type="button" class="btn btn-primary btn-fab btn-fixed-br d-none d-lg-inline-block">
     <svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#info"/></svg>
-  </button>
+    </button>
 
 	<!-- SVG assets - not visible -->
 	<svg id="svg-tool" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -543,10 +545,10 @@
           <stop offset="1" stop-color="#0F9CE6" stop-opacity="0" />
       </radialGradient>
     </defs>
-  </svg>
+    </svg>
 
 	<!-- jQuery -->
-    <script src="/static/js/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
 
 	<!-- Bootstrap bundle -->
 	<script src="/static/js/bootstrap.bundle.min.js"></script>
@@ -569,60 +571,6 @@
 	<script>
 		$(document).ready(function() {
             var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-			// Get checkbox statuses from localStorage if available (IE)
-			if (localStorage) {
-
-				// Menu minifier status (Contract/expand side menu on large screens)
-				var checkboxValue = localStorage.getItem('minifier');
-
-				if (checkboxValue === 'true') {
-					$('#sidebar,#menu-minifier').addClass('mini');
-					$('#minifier').prop('checked', true);
-
-				} else {
-
-					if ($('#minifier').is(':checked')) {
-						$('#sidebar,#menu-minifier').addClass('mini');
-						$('#minifier').prop('checked', true);
-					} else {
-						$('#sidebar,#menu-minifier').removeClass('mini');
-						$('#minifier').prop('checked', false);
-					}
-				}
-
-				// Switch statuses
-				var switchValues = JSON.parse(localStorage.getItem('switchValues')) || {};
-
-				$.each(switchValues, function(key, value) {
-
-					// Apply only if element is included on the page
-					if ($('[data-unit="' + key + '"]').length) {
-
-						if (value === true) {
-
-							// Apply appearance of the "unit" and checkbox element
-							$('[data-unit="' + key + '"]').addClass("active");
-							$("#" + key).prop('checked', true);
-							$("#" + key).closest("label").addClass("checked");
-
-							//In case of Camera unit - play video
-							if (key === "switch-camera-1" || key === "switch-camera-2") {
-								$('[data-unit="' + key + '"] video')[0].play();
-							}
-
-						} else {
-							$('[data-unit="' + key + '"]').removeClass("active");
-							$("#" + key).prop('checked', false);
-							$("#" + key).closest("label").removeClass("checked");
-							if (key === "switch-camera-1" || key === "switch-camera-2") {
-								$('[data-unit="' + key + '"] video')[0].pause();
-							}
-						}
-					}
-				});
-			}
-
 
 			// Contract/expand side menu on click. (only large screens)
 			$('#minifier').click(function() {
