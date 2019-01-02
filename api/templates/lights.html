@@ -1,7 +1,123 @@
 {% extends "layout.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Lights{% endblock %}
 {% block head %}
     {{ super() }}
+
+    <link href="/static/css/bootstrap-clockpicker.min.css" rel="stylesheet">
+    <style>
+        .input-group {
+            position: relative;
+            display: table;
+            border-collapse: separate
+        }
+
+        .input-group .form-control {
+            position: relative;
+            z-index: 2;
+            float: left;
+            width: 100%;
+            margin-bottom: 0
+        }
+
+        .input-group-lg > .form-control, .input-group-lg > .input-group-addon, .input-group-lg > .input-group-btn > .btn {
+            height: 46px;
+            padding: 10px 16px;
+            font-size: 18px;
+            line-height: 1.33;
+            border-radius: 6px
+        }
+
+        .input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
+            height: 30px;
+            padding: 5px 10px;
+            font-size: 12px;
+            line-height: 1.5;
+            border-radius: 3px
+        }
+
+        .input-group-addon, .input-group-btn, .input-group .form-control {
+            display: table-cell
+        }
+
+        .input-group-addon:not(:first-child):not(:last-child), .input-group-btn:not(:first-child):not(:last-child), .input-group .form-control:not(:first-child):not(:last-child) {
+            border-radius: 0
+        }
+
+        .input-group-addon, .input-group-btn {
+            width: 1%;
+            white-space: nowrap;
+            vertical-align: middle
+        }
+
+        .input-group-addon {
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 400;
+            text-align: center;
+            border-radius: 4px;
+            background-color: #0f9ce6;
+            box-shadow: 0 0 24px rgba(15, 156, 230, .45)
+        }
+
+        .input-group-addon.input-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 3px
+        }
+
+        .input-group-addon.input-lg {
+            padding: 10px 16px;
+            font-size: 18px;
+            border-radius: 6px
+        }
+
+        .input-group-addon input[type=radio], .input-group-addon input[type=checkbox] {
+            margin-top: 0
+        }
+
+        .input-group .form-control:first-child, .input-group-addon:first-child, .input-group-btn:first-child > .btn, .input-group-btn:first-child > .btn-group > .btn, .input-group-btn:first-child > .dropdown-toggle, .input-group-btn:last-child > .btn:not(:last-child):not(.dropdown-toggle), .input-group-btn:last-child > .btn-group:not(:last-child) > .btn {
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0
+        }
+
+        .input-group-addon:first-child {
+            border-right: 0
+        }
+
+        .input-group .form-control:last-child, .input-group-addon:last-child, .input-group-btn:last-child > .btn, .input-group-btn:last-child > .btn-group > .btn, .input-group-btn:last-child > .dropdown-toggle, .input-group-btn:first-child > .btn:not(:first-child), .input-group-btn:first-child > .btn-group:not(:first-child) > .btn {
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0
+        }
+
+        .input-group-addon:last-child {
+            border-left: 0
+        }
+
+        .input-group {
+            width: 110px;
+            margin-bottom: 10px;
+        }
+
+        .glyphicon {
+            position: relative;
+            top: 1px;
+            display: inline-block;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+
+        }
+
+        .glyphicon-time {
+            content: url(/static/images/si-glyph-timer.svg);
+            height: 16px;
+            width: 16px;
+
+        }
+
+    </style>
 {% endblock %}
 {% block content %}
     <!-- Interior lights START -->
@@ -69,6 +185,24 @@
                     <div data-toggle="popover-all" data-content="jQuery range slider using localStorage to remember the last status." data-original-title="Dimmer control" data-placement="top" data-offset="0,-24"></div>
                 </div>
                 <!-- Dimmer control - range slider END -->
+                <hr class="my-0">
+                <!-- Timer control - clockpicker START -->
+                <ul class="list-group borderless px-1" data-rangeslider="timmer-light-1">
+                    <li class="list-group-item">
+                        <p class="specs">Timer 1</p>
+                        <p class="ml-auto mb-0 text-success">OK</p>
+                        <p class="ml-auto mb-0 input-group clockpicker">
+                            <input type="text" class="form-control">
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-time"></span>
+                            </span>
+                        </p>
+                    </li>
+                </ul>
+                <div class="info-holder info-cb">
+                    <div data-toggle="popover-all" data-content="jQuery range slider using localStorage to remember the last status." data-original-title="Dimmer control" data-placement="top" data-offset="0,-24"></div>
+                </div>
+                <!-- Timer control - clockpicker END -->
             </div>
             <!-- Light unit END -->
         </div>
@@ -446,6 +580,8 @@
 
     <!-- Chartist.js pugin - Legend -->
     <script src="/static/js/chartist-legend.min.js"></script>
+
+    <script src="/static/js/bootstrap-clockpicker.min.js"></script>
     <script>
         $(document).ready(function() {
 
@@ -470,29 +606,6 @@
                         $('#minifier').prop('checked', false);
                     }
                 }
-
-                // Switch statuses
-                var switchValues = JSON.parse(localStorage.getItem('switchValues')) || {};
-
-                $.each(switchValues, function(key, value) {
-
-                    // Apply only if element is included on the page
-                    if ($('[data-unit="' + key + '"]').length) {
-
-                        if (value === true) {
-
-                            // Apply appearance of the "unit" and checkbox element
-                            $('[data-unit="' + key + '"]').addClass("active");
-                            $("#" + key).prop('checked', true);
-                            $("#" + key).closest("label").addClass("checked");
-
-                        } else {
-                            $('[data-unit="' + key + '"]').removeClass("active");
-                            $("#" + key).prop('checked', false);
-                            $("#" + key).closest("label").removeClass("checked");
-                        }
-                    }
-                });
 
                 // Range Slider values
                 var rangeValues = JSON.parse(localStorage.getItem('rangeValues')) || {};
@@ -719,6 +832,25 @@
             // Initialize a Pie chart in the container with the ID chart02
             new Chartist.Pie('#chart02', data02, options02, responsive_steps02);
 
+            $(".nav .nav-link").each(function() {
+                var path = $( this ).attr( "href" );
+                if(window.location.pathname == path){
+                    //$(".nav").find(".active").removeClass("active");
+                    $(this).addClass("active");
+                }
+
+            });
+
+            $('.clockpicker').clockpicker({
+                placement: 'left',
+                align: 'left',
+                autoclose: true,
+                donetext: 'Done',
+                afterDone: function() {
+                    console.log("after done");
+                }
+            });
+
         }); // docready END
 
         // Apply necessary changes, functionality when content is loaded
@@ -765,6 +897,5 @@
             // Check for Main contents scrollbar visibility and set right position for FAB button
             iot.positionFab();
         });
-
     </script>
 {% endblock %}

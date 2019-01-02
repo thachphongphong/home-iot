@@ -1,5 +1,5 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     {% block head %}
         <meta charset="utf-8">
@@ -12,7 +12,6 @@
     {% endblock %}
 </head>
 <body>
-<div id="content">
     <!-- Preloader -->
     <div id="iot-preloader">
         <div class="center-preloader d-flex align-items-center">
@@ -142,8 +141,8 @@
                 <!-- Side menu START -->
                 <div id="sidebar" class="sidebar-offcanvas">
                     <ul class="nav flex-column nav-sidebar">
-                        <li class="nav-item active">
-                            <a class="nav-link active" href="/">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
                                 <svg class="icon-sprite"><use xlink:href="/static/images/icons-sprite.svg#home"/></svg> Home
                             </a>
                         </li>
@@ -257,7 +256,6 @@
     <script src="/static/js/socket.io.min.js"></script>
     {% endblock %}
 
-</div>
 <div id="footer" class="align-items-center">
     {% block footer %}
         &copy; Copyright 2018 by tpp</a>.

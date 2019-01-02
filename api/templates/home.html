@@ -321,6 +321,27 @@
         $(document).ready(function() {
             var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+            // Get checkbox statuses from localStorage if available (IE)
+            if (localStorage) {
+
+                // Menu minifier status (Contract/expand side menu on large screens)
+                var checkboxValue = localStorage.getItem('minifier');
+
+                if (checkboxValue === 'true') {
+                    $('#sidebar,#menu-minifier').addClass('mini');
+                    $('#minifier').prop('checked', true);
+
+                } else {
+
+                    if ($('#minifier').is(':checked')) {
+                        $('#sidebar,#menu-minifier').addClass('mini');
+                        $('#minifier').prop('checked', true);
+                    } else {
+                        $('#sidebar,#menu-minifier').removeClass('mini');
+                        $('#minifier').prop('checked', false);
+                    }
+                }
+            }
             // Contract/expand side menu on click. (only large screens)
             $('#minifier').click(function() {
 
@@ -438,6 +459,16 @@
             socket.on('mqtt_message', function(data) {
                 api.getStatus();
             })
+
+            $(".nav .nav-link").each(function() {
+                var path = $( this ).attr( "href" );
+                if(window.location.pathname == path){
+                    //$(".nav").find(".active").removeClass("active");
+                    $(this).addClass("active");
+                }
+
+            });
+
         });
 
         // Apply necessary changes, functionality when content is loaded
