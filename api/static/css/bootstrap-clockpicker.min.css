@@ -30,12 +30,13 @@
 }
 
 .clockpicker-popover .popover-title {
-    background-color: #fff;
-    color: #999;
+    color: #fff;
     font-size: 24px;
     font-weight: 700;
     line-height: 30px;
-    text-align: center
+    text-align: center;
+    background-color: #0f9ce6;
+    box-shadow: 0 0 24px rgba(15, 156, 230, .45)
 }
 
 .clockpicker-popover .popover-title span {
