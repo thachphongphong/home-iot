@@ -137,10 +137,7 @@ def lights():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     else:
-        cur = get_db().cursor()
-        cur = cur.execute("select * from timer")
-        rows = cur.fetchall()
-        return render_template('lights.html', timers=rows)
+        return render_template('lights.html')
 
 @app.route('/iot')
 def index():
@@ -244,7 +241,7 @@ def get_timers():
         rs = cur.execute("SELECT * FROM timer ORDER BY devId, timer")
         items = []
         for row in rs:
-            items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': row[3],'action': row[4]})
+            items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': toLocal(row[3]),'action': row[4]})
         return json.dumps({'timers': items})
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
@@ -264,7 +261,7 @@ def get_timer(devId):
             rs = cur.execute("SELECT * FROM timer WHERE devId=?", (devId,))
             items = []
             for row in rs:
-                items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': row[3],'action': row[4]})
+                items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': toLocal(row[3]),'action': row[4]})
             return json.dumps({'timers': items})
         except sql.Error as e:
             app.logger.debug("Database error: %s" % e)
