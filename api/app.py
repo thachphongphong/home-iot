@@ -137,19 +137,14 @@ def lights():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     else:
-        return render_template('lights.html')
+        cur = get_db().cursor()
+        cur = cur.execute("select * from timer")
+        rows = cur.fetchall()
+        return render_template('lights.html', timers=rows)
 
 @app.route('/iot')
 def index():
-    u = datetime.utcnow()
-    u = u.replace(tzinfo=pytz.utc)
-
-    timeStr = u.astimezone(pytz.timezone("Europe/Amsterdam")).strftime("%Y-%m-%dT%H%%3A%M")[:-1]+"0"
-    print(timeStr)
-    cur = get_db().cursor()
-    cur = cur.execute("select * from timer")
-    rows = cur.fetchall()
-    return render_template('index.html', timers=rows)
+    return render_template('index.html')
 
 @app.route('/login',methods=['GET', 'POST'])
 def login():
@@ -237,6 +232,45 @@ def handle_connect(client, userdata, flags, rc):
        app.logger.debug("Subscribe device topic %s" % id)
        mqtt.subscribe("stat/"+id+"/POWER", 0)
 
+@app.route('/api/v1.0/timer', methods=['GET'])
+def get_timers():
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    try:
+        db = get_db()
+        db.row_factory = sql.Row
+        cur = db.cursor()
+        rs = cur.execute("SELECT * FROM timer ORDER BY devId, timer")
+        items = []
+        for row in rs:
+            items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': row[3],'action': row[4]})
+        return json.dumps({'timers': items})
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return "NULL"
+
+
+@app.route('/api/v1.0/timer/<devId>', methods=['GET'])
+def get_timer(devId):
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    if checkDevice(devId):
+        try:
+            db = get_db()
+            db.row_factory = sql.Row
+            cur = db.cursor()
+            rs = cur.execute("SELECT * FROM timer WHERE devId=?", (devId,))
+            items = []
+            for row in rs:
+                items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': row[3],'action': row[4]})
+            return json.dumps({'timers': items})
+        except sql.Error as e:
+            app.logger.debug("Database error: %s" % e)
+        return "NULL"
+    else:
+        return "Device not found"
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
 def add_to_schedule(devId, timer=1):

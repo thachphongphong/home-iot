@@ -79,6 +79,23 @@
             <p class="mt-2 text-center text-danger">Click the red area to accept/close message</p>
         </div>
     </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal modal-warning centered fade" id="confModal" tabindex="-1" role="dialog" aria-label="Confirm" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div id="confMess">
+                        <h4 class="font-weight-bold">Are you want to delete <span class="timer font-weight-normal"></span></h4>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary timer-delete">Delete</button>
+                    <button type="button" class="btn btn-secondary timer-close" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Wrapper START -->
 
     <div id="wrapper" class="hidden">
