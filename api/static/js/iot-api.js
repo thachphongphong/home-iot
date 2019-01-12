@@ -30,17 +30,13 @@ var api;
             console.log('api begin call status');
             $.get("/api/v1.0/status", function(data, status){
                 if(data){
-                    data = JSON.parse(data);
-                    var d = JSON.parse(localStorage.getItem("switchValues")) || {};
-                    if(d['switch-light-6'] != (data[1] == 'on')){
-                        iot.switchSingle('switch-light-6', (data[1] == 'on'));
-                    }
-                    if(d['switch-light-7'] != (data[0] == 'on')){
-                        iot.switchSingle('switch-light-7', (data[0] == 'on'));
-                    }
-                    if(d['switch-light-8'] != (data[2] == 'on')){
-                        iot.switchSingle('switch-light-8', (data[2] == 'on'));
-                    }
+                    var json = JSON.parse(data);
+                    iot.switchSingle('switch-light-6', (json[1] == 'on'));
+
+                    iot.switchSingle('switch-light-7', (json[0] == 'on'));
+
+                    iot.switchSingle('switch-light-8', (json[2] == 'on'));
+
                 }
             });
         },
