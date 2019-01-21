@@ -41,7 +41,6 @@ app.config['MQTT_KEEPALIVE'] = 5
 app.config['MQTT_TLS_ENABLED'] = False
 
 devices = ["sonoff1","sonoff2","sonoff-valve"]
-status = ["off","off","off"]
 schedule_topic = "topic/schedule"
 
 mqtt = Mqtt(app)
@@ -56,13 +55,21 @@ def handle_mqtt_message(client, userdata, message):
         payload=message.payload.decode(),
         qos=message.qos,
     )
-    app.logger.debug("on_message %s: %s: %s " % (client, userdata, message.payload.decode()))
-    global status
-    for idx, id in enumerate(devices):
+    app.logger.debug("on_message %s: %s: %s " % (client, userdata, data['payload']))
+    for id in devices:
         topic = "stat/"+id+"/POWER"
-        if(topic == message.topic):
-            app.logger.debug("topic status change %s: %s: %s " % (idx, topic, message.payload.decode()))
-            status[idx] =  message.payload.decode().lower()
+        if(topic == data['topic']):
+            app.logger.debug("topic status change  %s: %s " % (topic, data['payload']))
+            status = 1 if data['payload'].lower() == 'on' else 0;
+            with app.app_context():
+                try:
+                    db = get_db()
+                    cur = db.cursor()
+                    cur.execute("UPDATE status SET status=? WHERE devId=?", (status, id))
+                    db.commit()
+                    app.logger.debug("Success update status db  %s: %s " % (id, status))
+                except sql.Error as e:
+                    app.logger.debug("Database error: %s" % e)
             socketio.emit('mqtt_message')
 
 # @mqtt.on_log()
@@ -99,6 +106,14 @@ def checkDevice(d):
         return True
     else:
         return False
+
+def get_status(s):
+    if s == 1:
+        return 'ON'
+    elif s == 0:
+        return 'OFF'
+    else:
+        return ''
 
 def toUtc(at):
     naive = datetime.now()
@@ -189,11 +204,15 @@ def get_light_status(devId):
     if not checkToken(request):
         app.logger.debug("Token is invalid")
         abort(404)
-    for idx, id in enumerate(devices):
-        app.logger.debug("ID : %s"  % id)
-        if(id == devId):
-            app.logger.debug("GET /api/v1.0/%s: %s:" % (devId,status[idx]))
-            return status[idx]
+    try:
+        db = get_db()
+        db.row_factory = sql.Row
+        cur = db.cursor()
+        rs = cur.execute("SELECT * FROM status WHERE devId=?", (devId,))
+        row = rs.fetchone()
+        return json.dumps({'devId': row[0], 'status': row[1]})
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
     return ""
 
 @app.route('/api/v1.0/<devId>', methods=['POST'])
@@ -201,18 +220,28 @@ def post_light_status(devId):
     if not checkToken(request):
         app.logger.debug("Token is invalid")
         abort(404)
-    for idx, id in enumerate(devices):
-        if(id == devId):
-            global status
-            if(status[idx] == 'on'):
-                status[idx] = 'off'
-            else:
-                status[idx] = 'on'
-            topic = "cmnd/"+id+"/power"
-            app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status[idx]))
-            mqtt.publish(topic, status[idx], 2)
-            socketio.emit('mqtt_message')
-            return status[idx]
+    data = request.json
+    if (data is None or data['status'] is None):
+        app.logger.debug("Status is missing")
+        abort(500)
+    try:
+        db = get_db()
+        db.row_factory = sql.Row
+        cur = db.cursor()
+        rs = cur.execute("SELECT * FROM status WHERE devId=?", (devId,))
+        row = rs.fetchone()
+        if row is None:
+            app.logger.debug("Device not found %s", (devId))
+            abort(404)
+        if( data['status'] != row[1]):
+            topic = "cmnd/"+devId+"/power"
+            status = 'on' if data['status'] == 1 else 'off';
+            app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status))
+            mqtt.publish(topic, status, 2)
+            # socketio.emit('mqtt_message')
+        return json.dumps({'devId': row[0], 'status': data['status']})
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
     return ''
 
 @app.route('/api/v1.0/status', methods=['GET'])
@@ -220,8 +249,18 @@ def get_all_status():
     if not checkToken(request):
         app.logger.debug("Token is invalid")
         abort(404)
-    global status
-    return json.dumps(status)
+    try:
+        db = get_db()
+        db.row_factory = sql.Row
+        cur = db.cursor()
+        rs = cur.execute("SELECT * FROM status")
+        items = []
+        for row in rs:
+            items.append({'devId': row[0], 'status': row[1]})
+        return json.dumps(items)
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return ""
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
@@ -242,10 +281,10 @@ def get_timers():
         items = []
         for row in rs:
             items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': toLocal(row[3]),'action': row[4]})
-        return json.dumps({'timers': items})
+        return json.dumps(items)
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
-    return "NULL"
+    return ""
 
 
 @app.route('/api/v1.0/timer/<devId>', methods=['GET'])
@@ -262,11 +301,12 @@ def get_timer(devId):
             items = []
             for row in rs:
                 items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': toLocal(row[3]),'action': row[4]})
-            return json.dumps({'timers': items})
+            return json.dumps(items)
         except sql.Error as e:
             app.logger.debug("Database error: %s" % e)
-        return "NULL"
+        return ""
     else:
+        abort(404)
         return "Device not found"
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['POST'])
@@ -298,6 +338,7 @@ def add_to_schedule(devId, timer=1):
                 mqtt.publish(schedule_topic, json.dumps(data), 2)
             db.commit()
             app.logger.debug("Record successfully added %s", timer)
+            return json.dumps({'devId': devId, 'timer': timer, 'period': data['period'], 'at': toLocal(data['at']), 'action': data['action']})
         except sql.Error as e:
             db.rollback()
             app.logger.debug("Database error: %s" % e)
@@ -306,8 +347,9 @@ def add_to_schedule(devId, timer=1):
             app.logger.debug("Exception in _query: %s" % e)
         # finally:
         #     db.close()
-        return "OK"
+        return ""
     else:
+        abort(404)
         return "Device not found"
 
 @app.route('/api/v1.0/timer/<devId>/<int:timer>', methods=['DELETE'])
@@ -337,8 +379,9 @@ def delete_schedule(devId, timer=1):
             app.logger.debug("Exception in _query: %s" % e)
         # finally:
         #     db.close()
-        return "OK"
+        return ""
     else:
+        abort(404)
         return "Device not found"
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
