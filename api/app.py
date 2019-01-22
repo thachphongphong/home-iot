@@ -40,6 +40,8 @@ app.config['MQTT_PASSWORD'] = config['DEFAULT']['MQTT_PASSWORD']
 app.config['MQTT_KEEPALIVE'] = 5
 app.config['MQTT_TLS_ENABLED'] = False
 
+env_profile = config['DEFAULT']['ENV_PROFILE']
+
 devices = ["sonoff1","sonoff2","sonoff-valve"]
 schedule_topic = "topic/schedule"
 
@@ -238,7 +240,9 @@ def post_light_status(devId):
             status = 'on' if data['status'] == 1 else 'off';
             app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status))
             mqtt.publish(topic, status, 2)
-            # socketio.emit('mqtt_message')
+            if env_profile is not None:
+                mqtt.publish("stat/"+devId+"/POWER", status, 2)
+                # socketio.emit('mqtt_message')
         return json.dumps({'devId': row[0], 'status': data['status']})
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)

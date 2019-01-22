@@ -167,6 +167,12 @@
                     </label>
                 </div>
             </div>
+            <div class="card-body">
+                <div class="lights-controls" data-controls="switch-ex-lights">
+                    <button data-action="all-on" type="button" class="btn btn-primary lights-control">All <strong>ON</strong></button>
+                    <button data-action="all-off" type="button" class="btn btn-secondary lights-control">All <strong>OFF</strong></button>
+                </div>
+            </div>
             {#<div class="card" data-unit="switch-light-9">
 									<div class="card-body d-flex">
 										<svg class="icon-sprite">
@@ -398,8 +404,8 @@
 
                 var target = $(this).closest('.lights-controls').data('controls');
                 var action = $(this).data('action');
-
-                iot.switchGroup(target, action);
+                var status = (action == 'all-on') ? 1: 0;
+                api.switchGroup(target, status);
             });
 
             // Reposition to center when a modal is shown

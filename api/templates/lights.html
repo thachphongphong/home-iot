@@ -314,7 +314,7 @@
                 </div>
                 <hr class="my-0">
                 <div class="card-body">
-                    <div class="lights-controls" data-controls="switch-lights-ex">
+                    <div class="lights-controls" data-controls="switch-ex-lights">
                         <button data-action="all-on" type="button" class="btn btn-primary lights-control">All <strong>ON</strong></button>
                         <button data-action="all-off" type="button" class="btn btn-secondary lights-control">All <strong>OFF</strong></button>
                     </div>
@@ -566,7 +566,7 @@
 
                         this.last = t.timeStamp;
 
-                        iot.switchSingle(this.id, this.checked);
+                        api.switchDevice(this.id, this.checked);
 
                     } else {
                         return false;
@@ -577,7 +577,7 @@
                     // First attempt on this switch element
                     this.last = t.timeStamp;
 
-                    iot.switchSingle(this.id, this.checked);
+                    api.switchDevice(this.id, this.checked);
 
                 }
             });
@@ -587,8 +587,8 @@
 
                 var target = $(this).closest('.lights-controls').data('controls');
                 var action = $(this).data('action');
-
-                iot.switchGroup(target, action);
+                var status = (action == 'all-on') ? 1: 0;
+                api.switchGroup(target, status);
             });
 
             // Reposition to center when a modal is shown

@@ -30,32 +30,48 @@ var api;
             console.log('api begin call status');
             $.get("/api/v1.0/status", function(data, status){
                 if(data){
-                    var json = JSON.parse(data);
-                    iot.switchSingle('switch-light-6', (json[1] == 'on'));
-
-                    iot.switchSingle('switch-light-7', (json[0] == 'on'));
-
-                    iot.switchSingle('switch-light-8', (json[2] == 'on'));
+                    var ja = JSON.parse(data);
+                    ja.forEach(function(obj) {
+                        iot.switchSingle(api.revertId(obj.devId), Boolean(obj.status));
+                    });
 
                 }
             });
         },
         switchDevice: function (id, status) {
-            console.log('Api begin post status');
-            $.post("/api/v1.0/" + api.convertDevId(id), function(data){
-                if(data){
-                    // var d = JSON.parse(localStorage.getItem("switchValues")) || {};
-                    iot.switchSingle(id, data == 'on')
+            var action = (status) ? 1 : 0;
+            $.ajax({
+                url: '/api/v1.0/' + api.convertDevId(id),
+                data: JSON.stringify({'status': action}),
+                contentType: "application/json",
+                type: 'POST',
+                dataType:"json",
+                success: function(data) {
+                    iot.switchSingle(id, Boolean(data.status));
+                },
+                error: function (error) {
+                    alert('Cannot do action!')
+                    location.reload();
                 }
             });
         },
-        switchGroup: function (id, status) {
-            console.log('Api begin post status');
-            $.post("/api/v1.0/" + api.convertDevId(id), function(data){
-                if(data){
-                    // var d = JSON.parse(localStorage.getItem("switchValues")) || {};
-                    iot.switchSingle(id, data == 'on')
-                }
+        switchGroup: function (target, status) {
+            var action = (status) ? 1 : 0;
+            $.each( api.convertDevId(target), function(index, value ) {
+                $.ajax({
+                    url: '/api/v1.0/' + value,
+                    data: JSON.stringify({'status': action}),
+                    contentType: "application/json",
+                    type: 'POST',
+                    dataType:"json",
+                    success: function(data) {
+                        iot.switchSingle(api.revertId(data.devId), Boolean(data.status));
+                    },
+                    error: function (error) {
+                        alert('Cannot do action!')
+                        location.reload();
+                    }
+                });
             });
         },
         convertDevId: function (id) {
@@ -67,6 +83,8 @@ var api;
                     return 'sonoff1';
                 case 'switch-light-8':
                     return 'sonoff-valve';
+                case 'switch-ex-lights':
+                    return ['sonoff1','sonoff2','sonoff-valve']
                 //Interior
                 case 'switch-light-1':
                 case 'switch-light-2':
@@ -100,8 +118,7 @@ var api;
             console.log('api begin call get timer for devices');
             $.get("/api/v1.0/timer", function(data, status){
                 if(data){
-                    var json = JSON.parse(data);
-                    var timers = json.timers;
+                    var timers = JSON.parse(data);
                     $.each(timers, function(i, item) {
                         var _id = api.revertId(item.devId);
                         $('#spinner-'+ _id).hide();
