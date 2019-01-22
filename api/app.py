@@ -240,7 +240,7 @@ def post_light_status(devId):
             status = 'on' if data['status'] == 1 else 'off';
             app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status))
             mqtt.publish(topic, status, 2)
-            if env_profile is not None:
+            if env_profile == 'LOCAL':
                 mqtt.publish("stat/"+devId+"/POWER", status, 2)
                 # socketio.emit('mqtt_message')
         return json.dumps({'devId': row[0], 'status': data['status']})
