@@ -15,6 +15,7 @@ DATABASE = os.path.join(BASE_DIR, "iot.db")
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+
 class IOTJob:
     def __init__(self, debug=0, db=None):
         self.debug = debug
@@ -59,15 +60,18 @@ class IOTJob:
             rc = 2
         return rc
 
+
 def app_msg(msg):
     tstr = time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(time.time()))
     print("%s - %s" % (tstr, msg))
+
 
 def iotjob(devid, action):
     topic = "cmnd/{}/power".format(devid)
     status = 'off' if action == 0 else 'on' if action == 1 else ''
     app_msg("publish job: '%s' '%s" % (topic, status))
     client.publish(topic, status, 2)
+
 
 def createjob(devid, timer, period, at, action):
     job = schedule.every()
@@ -87,6 +91,7 @@ def createjob(devid, timer, period, at, action):
     job.do(iotjob, devid, action).tag(tag)
     return job
 
+
 def getdb():
     try:
         db = sql.connect(DATABASE)
@@ -95,36 +100,42 @@ def getdb():
         app_msg(e)
     return None
 
+
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to broker")
-        global Connected                #Use global variable
-        Connected = True                #Signal connection
+        global Connected  # Use global variable
+        Connected = True  # Signal connection
         client.subscribe("topic/schedule", 2)
     else:
         app_msg("Connection failed")
+
 
 def on_message(client, userdata, msg):
     data = json.loads(msg.payload.decode())
     if not data is None:
         if data["type"] == "ADD":
-            app_msg("CREATE A JOB FROM API")
-            createjob(data['devId'], data['timer'],data['period'], data['at'], data['action'])
+            app_msg("CREATE A JOB FROM API: " + data['devId'] + " " + str(data['timer']) + " " + data['period'] + " " +
+                    data['at'] + " " + str(data['action']))
+            createjob(data['devId'], data['timer'], data['period'], data['at'], data['action'])
         elif data["type"] == "REPLACE":
-            app_msg("REPLACE A JOB FROM API")
+            app_msg("REPLACE A JOB FROM API: " + data['devId'] + " " + str(data['timer']) + " " + data['period'] + " " +
+                    data['at'] + " " + str(data['action']))
             tag = '-'.join([data['devId'], str(data['timer'])])
             schedule.clear(tag)
-            createjob(data['devId'], data['timer'],data['period'], data['at'], data['action'])
+            createjob(data['devId'], data['timer'], data['period'], data['at'], data['action'])
         else:
-            app_msg("REMOVE A JOB FROM API")
+            app_msg("REMOVE A JOB FROM API: " + data['devId'] + " " + str(data['timer']))
             tag = '-'.join([data['devId'], str(data['timer'])])
             schedule.clear(tag)
 
+
 def main(argv=None):
-    debug =1
+    debug = 1
     db = getdb()
     job = IOTJob(debug, db)
     job.run()
+
 
 Connected = False
 client = mqtt.Client('scheduler')
@@ -132,11 +143,11 @@ client.on_connect = on_connect
 client.on_message = on_message
 
 client.username_pw_set(config['DEFAULT']['MQTT_USERNAME'], config['DEFAULT']['MQTT_PASSWORD'])
-client.connect(config['DEFAULT']['MQTT_BROKER_URL'] ,1883, 60)
+client.connect(config['DEFAULT']['MQTT_BROKER_URL'], 1883, 60)
 
 client.loop_start()
 
-while Connected != True:    #Wait for connection
+while Connected != True:  # Wait for connection
     time.sleep(0.1)
 
 if __name__ == "__main__":
