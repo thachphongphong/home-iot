@@ -68,8 +68,8 @@ def app_msg(msg):
 
 def iotjob(devid, action):
     topic = "cmnd/{}/power".format(devid)
-    status = 'off' if action == 0 else 'on' if action == 1 else ''
-    app_msg("publish job: '%s' '%s" % (topic, status))
+    status = 'on' if action == 1 else 'off'
+    app_msg("publish job: topic=" + topic + "status =" + status)
     client.publish(topic, status, 2)
 
 
@@ -88,6 +88,7 @@ def createjob(devid, timer, period, at, action):
     if at != '':
         job = job.at(at)
     tag = '-'.join([devid, str(timer)])
+    app_msg("add schedule: devid - " + devid + ", action - " + str(action) + " - tag -" + tag)
     job.do(iotjob, devid, action).tag(tag)
     return job
 
