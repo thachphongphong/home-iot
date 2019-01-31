@@ -1,7 +1,12 @@
 # Steps
 ## DB
 - sqlite3 iot
-- CREATE TABLE timer (devId integer, timer integer, period text, at text);
+- CREATE TABLE timer (devId varchar(20) NOT NULL, timer int NOT NULL, period varchar(5) NOT NULL, at varchar(20) NOT NULL, action int NOT NULL);
+- CREATE TABLE user (id integer PRIMARY KEY NOT NULL, username varchar(20) NOT NULL, password varchar(20) NOT NULL);
+- CREATE TABLE status (devId varchar(20) PRIMARY KEY NOT NULL, status int NOT NULL);
+- INSERT INTO status (devId, status) VALUES ('sonoff1', 0);
+- INSERT INTO status (devId, status) VALUES ('sonoff2', 0);
+- INSERT INTO status (devId, status) VALUES ('sonoff-valve', 1);
 
 ## Install
 - sudo apt-get install python-dev
@@ -25,7 +30,8 @@
 ## docker
 
 ### api
--  docker run -it --rm -p 5000:5000 -v {{PATH}}/home-iot/api:/home/iot  
-    -v {{PATH}}/home-iot/iot.db:/home/iot/iot.db iot-api:latest
+-  docker run -dit --net=host -p 5000:5000 -v {{PATH}}/api:/home/iot  
+   {{PATH}}/iot.db:/home/iot/iot.db iot-api
 ### api
-- docker run --net=host --name=scheduler -v /home/ldt/iot/home-iot/scheduler:/home/iot  -v /home/ldt/iot/home-iot/iot.db:/home/iot/iot.db -d iot-scheduler
+- docker run -dit --net=host --name=scheduler 
+-v {{PATH}}/scheduler:/home/iot {{PATH}}/iot.db:/home/iot/iot.db iot-scheduler
