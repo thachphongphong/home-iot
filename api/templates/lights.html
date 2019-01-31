@@ -766,6 +766,10 @@
             // Load Timer from api
             api.loadTimerDevice()
 
+            socket.on('mqtt_message', function(data) {
+                api.getStatus();
+            })
+
         }); // docready END
 
         // Apply necessary changes, functionality when content is loaded
