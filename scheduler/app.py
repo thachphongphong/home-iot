@@ -68,7 +68,7 @@ def app_msg(msg):
 
 def iotjob(devid, action):
     topic = "cmnd/{}/power".format(devid)
-    status = 'on' if action == '1' else 'off'
+    status = 'on' if str(action) == '1' else 'off'
     app_msg("publish job: topic=" + topic + " status =" + status)
     client.publish(topic, status, 2)
 
