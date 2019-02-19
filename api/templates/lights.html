@@ -494,7 +494,7 @@
     <script>
         $(document).ready(function() {
 
-
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
             // Get checkbox statuses from localStorage if available (IE)
             if (localStorage) {
 
