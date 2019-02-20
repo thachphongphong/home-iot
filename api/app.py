@@ -68,6 +68,7 @@ def handle_mqtt_message(client, userdata, message):
                     db = get_db()
                     cur = db.cursor()
                     cur.execute("UPDATE status SET status=? WHERE devId=?", (status, id))
+                    cur.execute("INSERT INTO log VALUES(?,?,?)", (id, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                     db.commit()
                     app.logger.debug("Success update status db  %s: %s " % (id, status))
                 except sql.Error as e:
@@ -158,7 +159,7 @@ def lights():
 
 @app.route('/iot')
 def index():
-    return render_template('index.html')
+    return 'UP'
 
 @app.route('/login',methods=['GET', 'POST'])
 def login():
@@ -387,5 +388,10 @@ def delete_schedule(devId, timer=1):
     else:
         abort(404)
         return "Device not found"
+
+# LOG
+def addLogMonitor(devId, status, time):
+    return ''
+
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
