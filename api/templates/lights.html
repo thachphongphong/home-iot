@@ -278,50 +278,11 @@
             </div>
             <!-- Light unit END -->
         </div>
-    </div>
+    </div>#}
     <!-- Interior lights END -->
-    <hr class="my-2">
-    <!-- Interior Lights charts START -->
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Interior Lights usage</h4>
-                </div>
-                <hr class="my-0">
-                <div class="card-body">
-                    <div class="row">
-                        <div id="chart01" class="col-sm-12 col-md-8 pb-3 ct-chart">
-                            <p class="text-center text-primary">Daily</p>
-                        </div>
-                        <div id="chart02" class="col-sm-12 col-md-4 pb-3 ct-chart">
-                            <p class="text-center text-primary mb-0">Overall</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <!-- Interior Lights charts END -->
-    <hr class="my-2">#}
     <!-- Exterior lights START -->
     <div class="row" data-unit-group="switch-lights-ex">
-        <div class="col-sm-12 col-md-6 col-xl-4">
-            <!-- ON/OFF all interior lights  START -->
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="card-title">Exterior Lights</h3>
-                </div>
-                <hr class="my-0">
-                <div class="card-body">
-                    <div class="lights-controls" data-controls="switch-ex-lights">
-                        <button data-action="all-on" type="button" class="btn btn-primary lights-control">All <strong>ON</strong></button>
-                        <button data-action="all-off" type="button" class="btn btn-secondary lights-control">All <strong>OFF</strong></button>
-                    </div>
-                </div>
-            </div>
-            <!-- ON/OFF all interior lights  END -->
-        </div>
         <div class="col-sm-12 col-md-6 col-xl-4">
             <div class="card" data-unit="switch-light-6">
                 <!-- Light switch START -->
@@ -479,16 +440,54 @@
                 <!-- Bulb details END -->
             </div>
         </div>#}
+        <div class="col-sm-12 col-md-6 col-xl-4">
+            <!-- ON/OFF all interior lights  START -->
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Exterior Lights</h3>
+                </div>
+                <hr class="my-0">
+                <div class="card-body">
+                    <div class="lights-controls" data-controls="switch-ex-lights">
+                        <button data-action="all-on" type="button" class="btn btn-primary lights-control">All <strong>ON</strong></button>
+                        <button data-action="all-off" type="button" class="btn btn-secondary lights-control">All <strong>OFF</strong></button>
+                    </div>
+                </div>
+            </div>
+            <!-- ON/OFF all interior lights  END -->
+        </div>
     </div>
     <!-- Exterior lights END -->
+    <hr class="my-2">
+    <!-- Interior Lights charts START -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Exterior Lights usage</h4>
+                </div>
+                <hr class="my-0">
+                <div class="card-body">
+                    <div class="row">
+                        <div id="chart01" class="col-sm-12 ct-chart">
+                            <p class="text-center text-primary">Daily</p>
+                        </div>
+                        {# <div id="chart02" class="col-sm-12 col-md-4 pb-3 ct-chart">
+                            <p class="text-center text-primary mb-0">Overall</p>
+                        </div>#}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block js %}
     {{ super() }}
     <!-- Chartist.js library - NO jQuery dependency -->
-    {#<script src="/static/js/chartist.min.js"></script>
+    <script src="/static/js/chartist.min.js"></script>
 
     <!-- Chartist.js pugin - Legend -->
-    <script src="/static/js/chartist-legend.min.js"></script>#}
+    <script src="/static/js/chartist-legend.min.js"></script>
 
     <script src="/static/js/bootstrap-clockpicker.min.js"></script>
     <script>
@@ -515,21 +514,7 @@
                         $('#minifier').prop('checked', false);
                     }
                 }
-
-                // Range Slider values
-               {# var rangeValues = JSON.parse(localStorage.getItem('rangeValues')) || {};
-
-                $.each(rangeValues, function(key, value) {
-
-                    // Apply only if element is included on the page
-                    if ($('[data-rangeslider="' + key + '"]').length) {
-                        // Update Range slider
-                        $('[data-rangeslider="' + key + '"] input[type="range"]').val(value);
-                        $('[data-rangeslider="' + key + '"] .range-output').html(value);
-                    }
-                });#}
             }
-
 
             // Contract/expand side menu on click. (only large screens)
             $('#minifier').click(function() {
@@ -631,80 +616,7 @@
 
             });
 
-            // Data binding for numeric representation of range slider
-           {# $(document).on('input', 'input[type="range"]', function() {
-                $('[data-rangeslider="' + this.id + '"] .range-output').html(this.value);
-            });#}
-
-            // Bar Chart initialization settings - Chartist.js
-
-          {#  var data01 = {
-                // Labels array that can contain any sort of values
-                labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                // Series array that contains series objects or in this case series data arrays
-                series: [{
-                    "name": "Kitchen",
-                    "data": [7, 4, 6, 5, 6, 3, 8]
-                },
-                    {
-                        "name": "Dining room",
-                        "data": [3, 1, 1, 2, 1, 2, 2]
-                    },
-                    {
-                        "name": "Living room",
-                        "data": [6, 2, 3, 4, 2, 5, 7]
-                    },
-                    {
-                        "name": "Bedroom",
-                        "data": [2, 1, 1, 1, 1, 2, 3]
-                    },
-                    {
-                        "name": "Bathroom",
-                        "data": [6, 5, 6, 7, 5, 12, 9]
-                    }
-                ]
-            };
-
-            var options01 = {
-                axisY: {
-                    labelInterpolationFnc: function(value) {
-                        return value + 'h'
-                    }
-                },
-                height: 240,
-                high: 14,
-                low: 0,
-                scaleMinSpace: 6,
-                onlyInteger: false,
-                referenceValue: 0,
-                seriesBarDistance: 8,
-                plugins: [
-                    Chartist.plugins.legend({
-                        position: 'bottom'
-                    })
-                ]
-            };
-
-            var responsive_steps01 = [
-                // Show only every second label
-                ['screen and (max-width: 768px)', {
-                    axisX: {
-                        labelInterpolationFnc: function skipLabels(value, index, labels) {
-                            return index % 2 === 0 ? value : null;
-                        }
-                    }
-                }],
-                // Show only every fourth label
-                ['screen and (max-width: 480px)', {
-                    axisX: {
-                        labelInterpolationFnc: function skipLabels(value, index, labels) {
-                            return index % 4 === 0 ? value : null;
-                        }
-                    }
-                }]
-            ];
-
-            // Pie Chart initialization settings - Chartist.js
+           {# // Pie Chart initialization settings - Chartist.js
             var data02 = {
                 labels: ['Kitchen', 'Dining room', 'Living room', 'Bedroom', 'Bathroom'],
                 series: [28, 12, 20, 9, 31]
@@ -726,20 +638,10 @@
                     height: 240,
                     chartPadding: 25
                 }]
-            ];
-
-            // Initialize a Bar chart in the container with the ID chart01
-            new Chartist.Bar('#chart01', data01, options01, responsive_steps01)
-                .on('draw', function(data001) {
-                    if (data001.type === 'bar') {
-                        data001.element.attr({
-                            style: 'stroke-width: 6px;'
-                        });
-                    }
-                });
+            ];#}
 
             // Initialize a Pie chart in the container with the ID chart02
-            new Chartist.Pie('#chart02', data02, options02, responsive_steps02);#}
+            {#new Chartist.Pie('#chart02', data02, options02, responsive_steps02);#}
 
             $(".nav .nav-link").each(function() {
                 var path = $( this ).attr( "href" );
@@ -770,6 +672,9 @@
                 api.getStatus();
             })
 
+            // Draw bar chart
+            api.drawLightChart();
+
         }); // docready END
 
         // Apply necessary changes, functionality when content is loaded
@@ -784,21 +689,6 @@
                 // Hide preloader overlay when content is loaded
                 $('#iot-preloader,.card-preloader').fadeOut();
                 $("#wrapper").removeClass("hidden");
-
-                {#// Initialize range sliders
-                $('input[type="range"]').rangeslider({
-                    polyfill: false,
-                    onSlideEnd: function(position, value) {
-
-                        var rangeValues = JSON.parse(localStorage.getItem('rangeValues')) || {};
-                        // Update localStorage
-                        if (localStorage) {
-                            rangeValues[this.$element[0].id] = value;
-                            localStorage.setItem("rangeValues", JSON.stringify(rangeValues));
-                        }
-                    }
-
-                });#}
 
                 // Check for Main contents scrollbar visibility and set right position for FAB button
                 iot.positionFab();

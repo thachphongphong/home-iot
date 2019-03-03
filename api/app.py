@@ -13,7 +13,7 @@ from flask import Flask, render_template, g, request, abort, session, redirect, 
 from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
-from datetime import datetime
+from datetime import datetime, timedelta
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "iot.db")
@@ -390,8 +390,62 @@ def delete_schedule(devId, timer=1):
         return "Device not found"
 
 # LOG
-def addLogMonitor(devId, status, time):
-    return ''
+@app.route('/api/v1.0/chart', methods=['GET'])
+def chartLog():
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    try:
+        dt = datetime.now()
+        start = dt - timedelta(days=dt.weekday())
+        end = start + timedelta(days=6)
+        db = get_db()
+        db.row_factory = sql.Row
+        cur = db.cursor()
+        rs = cur.execute("SELECT * FROM log WHERE time >= ? AND time <= ? ORDER BY time", (start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
+        map = {}
+        tmp = {}
+        series = []
+        labels = []
+        for row in rs:
+            tmp.setdefault(row[2].split(" ")[0] + " - " + row[0], []).append({"s" : row[1], "t" : row[2]})
+
+        for k, v in tmp.items():
+            tdelta = 0
+            ts = te = None
+            for r in tmp[k]:
+                if(r['s'] == 1):
+                    ts = datetime.strptime(r['t'],'%Y-%m-%d %H:%M:%S')
+                elif(r['s'] == 0):
+                    te = datetime.strptime(r['t'],'%Y-%m-%d %H:%M:%S')
+                    if ts is not None:
+                        tdelta += (te - ts).total_seconds()
+                        ts = te = None
+            map.setdefault(k.split(" - ")[1],[]).append(divmod(tdelta, 60)[0])
+
+        for k, v in map.items():
+            data = [0] * 7
+            indx = 0
+            for d in map[k]:
+                data[indx] = d
+                indx += 1
+            series.append({"name": k, "data": data})
+
+        d = start
+        while d <= end:
+            labels.append(d.strftime('%a'))
+            d += timedelta(days=1)
+
+        return json.dumps({'labels': labels, 'series': series})
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return ""
+
+def checkHasKey(d, map):
+    for k in map:
+        if (k.split(" - ")[0] == d):
+            return True
+    return False
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', use_reloader=True, debug=True)
