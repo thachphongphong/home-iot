@@ -5,8 +5,8 @@
 * switch-light-1 - 5 :Interior
 * switch-light-6 - 9 :Exterior
 *  switch-light-6 : sonoff2
-*  switch-light-7 : sonoff1
-*  switch-light-8 : sonoff-valve
+*  switch-pumper : sonoff1
+*  switch-valve : sonoff-valve
 *
 * wash-machine
 * home-fridge
@@ -79,12 +79,12 @@ var api;
                 //Exterior
                 case 'switch-light-6':
                     return 'sonoff2';
-                case 'switch-light-7':
+                case 'switch-pumper':
                     return 'sonoff1';
-                case 'switch-light-8':
+                case 'switch-valve':
                     return 'sonoff-valve';
                 case 'switch-ex-lights':
-                    return ['sonoff1','sonoff2','sonoff-valve']
+                    return ['sonoff1']
                 //Interior
                 case 'switch-light-1':
                 case 'switch-light-2':
@@ -101,9 +101,9 @@ var api;
                 case 'sonoff2':
                     return 'switch-light-6';
                 case 'sonoff1':
-                    return 'switch-light-7';
+                    return 'switch-pumper';
                 case 'sonoff-valve':
-                    return 'switch-light-8';
+                    return 'switch-valve';
                 //Interior
                 // case 'switch-light-1':
                 // case 'switch-light-2':
@@ -120,7 +120,7 @@ var api;
                 case 'sonoff2':
                     return 'Front doors';
                 case 'sonoff1':
-                    return 'Back doors';
+                    return 'Pumper';
                 case 'sonoff-valve':
                     return 'Valve';
                 //Interior
@@ -145,10 +145,10 @@ var api;
                         '<li class="list-group-item" data-id="'+item.devId+'" data-timer="'+item.timer+'">'+
                             '<p class="specs">'+item.timer+'</p>'+
                             '<p class="ml-auto mb-0">' +
-                            '<select class="form-control custom-focus" id="timer-op-'+_id+'-'+item.timer+'">' +
+                            '<select class="form-control timer-mode custom-focus" id="timer-op-'+_id+'-'+item.timer+'">' +
                             '<option value="1">ON</option>' +
                             '<option value="0">OFF</option>' +
-                            '<option value="2">TOGGLE</option>' +
+                            '<option value="2">TOG</option>' +
                             '</select>' +
                             '</p>'+
                             '<p class="ml-auto mb-0 input-group clockpicker">'+
@@ -166,7 +166,8 @@ var api;
                             var timer = $(this).parents('li').data("timer")
                             var action =  $( this ).val()
                             var at = $(this).parents('li').find('input').val();
-                            var t = {"devId":devId, "timer": timer, "period" : "day", "at": at, "action": action}
+                            var period = $(this).parents('ul').children(":first").find('select').val();
+                            var t = {"devId":devId, "timer": timer, "period" : period, "at": at, "action": action}
                             api.updateTimerDevice(t);
                         });
                     });
@@ -186,7 +187,8 @@ var api;
                     var devId = $(input).parents('li').data("id")
                     var timer = $(input).parents('li').data("timer")
                     var action =  $(input).parents('li').find('select').val()
-                    var t = {"devId":devId, "timer": timer, "period" : "day", "at": at, "action": action}
+                    var period = $(input).parents('ul').children(":first").find('select').val();
+                    var t = {"devId":devId, "timer": timer, "period" : period, "at": at, "action": action}
                     api.updateTimerDevice(t);
                 }
             });
@@ -204,10 +206,10 @@ var api;
                 '<li class="list-group-item" data-id="'+devId+'" data-timer="'+timer+'">'+
                 '<p class="specs">'+timer+'</p>'+
                 '<p class="ml-auto mb-0">' +
-                '<select class="form-control custom-focus" id="timer-op-'+devId+'-'+timer+'">' +
+                '<select class="form-control timer-mode custom-focus" id="timer-op-'+devId+'-'+timer+'">' +
                 '<option value="1">ON</option>' +
                 '<option value="0">OFF</option>' +
-                '<option value="2">TOGGLE</option>' +
+                '<option value="2">TOG</option>' +
                 '</select>' +
                 '</p>'+
                 '<p class="ml-auto mb-0 input-group clockpicker">'+
@@ -231,7 +233,8 @@ var api;
                     var devId = $(input).parents('li').data("id")
                     var timer = $(input).parents('li').data("timer")
                     var action =  $(input).parents('li').find('select').val()
-                    var t = {"devId":devId, "timer": timer, "period" : "day", "at": at, "action": action}
+                    var period = $(input).parents('ul').children(":first").find('select').val()
+                    var t = {"devId":devId, "timer": timer, "period" : period, "at": at, "action": action}
                     api.updateTimerDevice(t);
                 }
             });
@@ -240,16 +243,17 @@ var api;
                 var timer = $(this).parents('li').data("timer")
                 var action =  $( this ).val()
                 var at = $(this).parents('li').find('input').val();
-                var t = {"devId":devId, "timer": timer, "period" : "day", "at": at, "action": action}
+                var period = $(this).parents('ul').children(":first").find('select').val();
+                var t = {"devId":devId, "timer": timer, "period" : period, "at": at, "action": action}
                 api.updateTimerDevice(t);
             });
         },
         updateTimerDevice: function (t) {
-            if(t.devId != '' && t.timer > 0 && t.at != '' && t.action != ''){
+            if(t.devId != '' && t.timer > 0 && t.at != '' && t.action != '' && t.period != ''){
                 $.ajax({
                     url: '/api/v1.0/timer/'+t.devId+'/'+t.timer,
                     data: JSON.stringify({
-                        "period": "day",
+                        "period": t.period,
                         "at": t.at,
                         "action": t.action
                     }),
@@ -275,9 +279,15 @@ var api;
             });
         },
         showAddTimter: function () {
-            $('[id^=spinner-switch-light-]').each(function() {
+            $('[id^=spinner-switch-]').each(function() {
                 $(this).next().prepend('<li class="list-group-item">' +
                     '<p class="specs">Timer</p>' +
+                    '<p class="ml-auto mb-0">' +
+                    '<select class="form-control custom-focus">' +
+                    '<option value="day">Daily</option>' +
+                    '<option value="hour">Hourly</option>' +
+                    '</select>' +
+                    '</p>'+
                     '<p class="ml-auto mb-0"><button type="button" class="form-control btn btn-primary btn-sm" onclick="api.addTimerDevice(this)">+</button></p>' +
                     '</li>')
                 if(!$(this).is(":hidden")){

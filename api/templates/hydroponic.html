@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Lights{% endblock %}
+{% block title %}Hydroponic{% endblock %}
 {% block head %}
     {{ super() }}
 
@@ -7,19 +7,18 @@
     <link href="/static/css/iot-light.css" rel="stylesheet">
 {% endblock %}
 {% block content %}
-    <!-- Exterior lights START -->
+    <!-- Exterior START -->
     <div class="row" data-unit-group="switch-lights-ex">
         <div class="col-sm-12 col-md-6 col-xl-4">
-            <div class="card" data-unit="switch-light-6">
-                <!-- Light switch START -->
+            <div class="card" data-unit="switch-pumper">
                 <div class="card-body d-flex flex-row justify-content-start">
                     <svg class="icon-sprite">
                         <use class="glow" fill="url(#radial-glow)" xlink:href="/static/images/icons-sprite.svg#glow"/>
                         <use xlink:href="/static/images/icons-sprite.svg#bulb-eco"/>
                     </svg>
-                    <h5>Front doors</h5>
+                    <h5>Pumper</h5>
                     <label class="switch ml-auto">
-                        <input type="checkbox" id="switch-light-6">
+                        <input type="checkbox" id="switch-pumper">
                     </label>
                 </div>
                 <!-- Light switch END -->
@@ -32,40 +31,23 @@
                     </li>
                     <li class="list-group-item pt-0">
                         <p class="specs">Power Consumption</p>
-                        <p class="ml-auto mb-0">24W</p>
+                        <p class="ml-auto mb-0">28W</p>
                     </li>
                     <li class="list-group-item pt-0 pb-4">
                         <p class="specs">Voltage range</p>
-                        <p class="ml-auto mb-0">240V</p>
+                        <p class="ml-auto mb-0">AC-220V</p>
                     </li>
                 </ul>
                 <!-- Bulb details END -->
                 <hr class="my-0">
                 <!-- Timer control - clockpicker START -->
-                <button id="spinner-switch-light-6" class="btn btn-primary" type="button" disabled>
+                <button id="spinner-switch-pumper" class="btn btn-primary" type="button" disabled>
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     Loading...
                 </button>
-                <ul id="timer-switch-light-6" class="list-group borderless px-1">
+                <ul id="timer-switch-pumper" class="list-group borderless px-1">
                 </ul>
-                <!-- Timer control - clockpicker END -->
             </div>
-        </div>
-        <div class="col-sm-12 col-md-6 col-xl-4">
-            <!-- ON/OFF all interior lights  START -->
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="card-title">Exterior Lights</h3>
-                </div>
-                <hr class="my-0">
-                <div class="card-body">
-                    <div class="lights-controls" data-controls="switch-ex-lights">
-                        <button data-action="all-on" type="button" class="btn btn-primary lights-control">All <strong>ON</strong></button>
-                        <button data-action="all-off" type="button" class="btn btn-secondary lights-control">All <strong>OFF</strong></button>
-                    </div>
-                </div>
-            </div>
-            <!-- ON/OFF all interior lights  END -->
         </div>
     </div>
     <!-- Exterior lights END -->
@@ -75,7 +57,7 @@
         <div class="col-sm-12">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Exterior Lights usage</h4>
+                    <h4 class="card-title">Pumper usage</h4>
                 </div>
                 <hr class="my-0">
                 <div class="card-body">
@@ -83,9 +65,6 @@
                         <div id="chart01" class="col-sm-12 ct-chart">
                             <p class="text-center text-primary">Daily</p>
                         </div>
-                        {# <div id="chart02" class="col-sm-12 col-md-4 pb-3 ct-chart">
-                            <p class="text-center text-primary mb-0">Overall</p>
-                        </div>#}
                     </div>
                 </div>
             </div>
@@ -178,15 +157,6 @@
                 }
             });
 
-            // All ON/OFF controls
-            $('.lights-control').click(function() {
-
-                var target = $(this).closest('.lights-controls').data('controls');
-                var action = $(this).data('action');
-                var status = (action == 'all-on') ? 1: 0;
-                api.switchGroup(target, status);
-            });
-
             // Reposition to center when a modal is shown
             $('.modal.centered').on('show.bs.modal', iot.centerModal);
 
@@ -227,33 +197,6 @@
 
             });
 
-           {# // Pie Chart initialization settings - Chartist.js
-            var data02 = {
-                labels: ['Kitchen', 'Dining room', 'Living room', 'Bedroom', 'Bathroom'],
-                series: [28, 12, 20, 9, 31]
-            };
-
-            var options02 = {
-                chartPadding: 50,
-                donut: true,
-                donutWidth: 12,
-                labelOffset: 20,
-                labelDirection: 'explode',
-                labelInterpolationFnc: function(value, idx) {
-                    return data02.series[idx] + '%'
-                }
-            };
-
-            var responsive_steps02 = [
-                ['screen and (max-width: 768px)', {
-                    height: 240,
-                    chartPadding: 25
-                }]
-            ];#}
-
-            // Initialize a Pie chart in the container with the ID chart02
-            {#new Chartist.Pie('#chart02', data02, options02, responsive_steps02);#}
-
             $(".nav .nav-link").each(function() {
                 var path = $( this ).attr( "href" );
                 if(window.location.pathname == path){
@@ -284,7 +227,7 @@
             })
 
             // Draw bar chart
-            api.drawLightChart();
+        //   api.drawHydroponicChart();
 
         }); // docready END
 
