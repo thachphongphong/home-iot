@@ -49,15 +49,16 @@ class IOTJob:
 
     def run(self):
         rc = 0
-        try:
-            # if not self.schedulejob():
-            #     rc = 3
-            if self.loadjobs():
-                self.run_schedule()
-                time.sleep(10)
-        except Exception as e:
-            self.log_msg(str(e), 2)
-            rc = 2
+        while rc < 3:
+            try:
+                # if not self.schedulejob():
+                #     rc = 3
+                if self.loadjobs():
+                    self.run_schedule()
+                    time.sleep(10)
+            except Exception as e:
+                self.log_msg(str(e), 2)
+            rc += 1
         return rc
 
 
@@ -74,23 +75,31 @@ def iotjob(devid, action):
 
 
 def createjob(devid, timer, period, at, action):
-    job = schedule.every()
-    if period == 'day':
-        job = job.day
-    elif period == 'hour':
-        job = job.hour
-    elif period == 'minute':
-        job = job.minute
-    elif period == 'second':
-        job = job.second
-    else:
-        return "Invalid period " + period
-    if at != '':
-        job = job.at(at)
-    tag = '-'.join([devid, str(timer)])
-    app_msg("add schedule: devid - " + devid + ", action - " + str(action) + " - tag -" + tag)
-    job.do(iotjob, devid, action).tag(tag)
-    return job
+    try:
+        job = schedule.every()
+        if period == 'day':
+            job = job.day
+            if at != '':
+                job = job.at(at)
+        elif period == 'hour':
+            job = job.hour
+            if at != '':
+                at = ":" + at.split(":")[1]
+                job = job.at(at)
+        elif period == 'minute':
+            job = job.minute
+        elif period == 'second':
+            job = job.second
+        else:
+            return "Invalid period " + period
+        tag = '-'.join([devid, str(timer)])
+        app_msg("add schedule: " + devid + " - " + str(timer) + " - " + period + " - " + at + " - " + str(action))
+        job.do(iotjob, devid, action).tag(tag)
+        return job
+    except Exception as e:
+        app_msg("Error when load job: " + str(e))
+        return None
+
 
 
 def getdb():
