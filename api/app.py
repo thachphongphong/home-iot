@@ -448,6 +448,51 @@ def chartLog():
         app.logger.debug("Database error: %s" % e)
     return ""
 
+@app.route('/api/v1.0/hydro-chart', methods=['GET'])
+def hydroChartLog():
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    try:
+        start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(1)
+        db = get_db()
+        db.row_factory = sql.Row
+        cur = db.cursor()
+        rs = cur.execute("SELECT * FROM log WHERE devid = ? AND time >= ? AND time < ? ORDER BY time", ('sonoff1', start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
+        series = []
+        labels = []
+        tdelta = 0
+        map = {}
+        ts = te = None
+        for row in rs:
+            if(row[1] == 1):
+                 ts = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S')
+            elif(row[1] == 0):
+                te = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S')
+                if ts is not None:
+                    tdelta += (te - ts).total_seconds()
+                    map.setdefault(ts.strftime('%H:%M'),tdelta)
+                    ts = te = None
+                    tdelta = 0
+        data = [0] * 48
+        for k, v in map.items():
+            idx = int(k.split(':')[0]) * 2
+            if int(k.split(':')[1]) > 0:
+                idx += 1
+            data[idx] = map[k]
+        series.append({"name": 'sonoff1', "data": data})
+
+        d = start
+        while d < end:
+            labels.append(d.strftime('%H'))
+            d += timedelta(minutes=30)
+
+        return json.dumps({'labels': labels, 'series': series})
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return ""
+
 def checkHasKey(d, map):
     for k in map:
         if (k.split(" - ")[0] == d):

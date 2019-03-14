@@ -368,6 +368,71 @@ var api;
 
                 }
             });
+        },
+        drawHydroponicChart: function () {
+            // Bar Chart initialization settings - Chartist.js
+            $.get("/api/v1.0/hydro-chart", function(data, status){
+                if(data){
+                    var data01 = JSON.parse(data);
+                    if (data01.series != null) {
+                        data01.series.forEach(function(obj) {
+                            obj.name = api.revertName(obj.name)
+                        });
+                    }
+                    var options01 = {
+                        axisY: {
+                            labelInterpolationFnc: function(value) {
+                                return value + 's'
+                            }
+                        },
+                        axisX: {
+                            labelInterpolationFnc: function(value, index) {
+                                return index % 2 === 0 ? value : null;
+                            }
+                        },
+                        height: 240,
+                        high: 120,
+                        low: 0,
+                        // scaleMinSpace: 6,
+                        // onlyInteger: false,
+                        // referenceValue: 0,
+                        // seriesBarDistance: 8,
+                        plugins: [
+                            Chartist.plugins.legend({
+                                position: 'bottom'
+                            })
+                        ]
+                    };
+                    var responsive_steps01 = [
+                        // Show only every second label
+                        ['screen and (max-width: 768px)', {
+                            axisX: {
+                                labelInterpolationFnc: function skipLabels(value, index, labels) {
+                                    return index % 2 === 0 ? value : null;
+                                }
+                            }
+                        }],
+                        // Show only every fourth label
+                        ['screen and (max-width: 480px)', {
+                            axisX: {
+                                labelInterpolationFnc: function skipLabels(value, index, labels) {
+                                    return index % 4 === 0 ? value : null;
+                                }
+                            }
+                        }]
+                    ];
+                    // Initialize a Bar chart in the container with the ID chart01
+                    new Chartist.Bar('#hydroponicChart', data01, options01, responsive_steps01)
+                        .on('draw', function(data001) {
+                            if (data001.type === 'bar') {
+                                data001.element.attr({
+                                    style: 'stroke-width: 6px;'
+                                });
+                            }
+                        });
+
+                }
+            });
         }
     }, window.api = b
 }(this.jQuery);
