@@ -143,7 +143,7 @@ var api;
                         $('#spinner-'+ _id).hide();
                         $('#timer-'+ _id).append(
                         '<li class="list-group-item" data-id="'+item.devId+'" data-timer="'+item.timer+'">'+
-                            '<p class="specs">'+item.timer+'</p>'+
+                            '<p class="specs">' + item.period.toUpperCase() +'</p>'+
                             '<p class="ml-auto mb-0">' +
                             '<select class="form-control timer-mode custom-focus" id="timer-op-'+_id+'-'+item.timer+'">' +
                             '<option value="1">ON</option>' +
@@ -173,8 +173,8 @@ var api;
                     });
                     api.initClockPicker();
                 }
-                api.showAddTimter();
             });
+            api.showAddTimter();
         },
         initClockPicker: function () {
             $('.clockpicker').clockpicker({
@@ -280,7 +280,8 @@ var api;
         },
         showAddTimter: function () {
             $('[id^=spinner-switch-]').each(function() {
-                $(this).next().prepend('<li class="list-group-item">' +
+                if(!$(this).is(":hidden")){
+                    $(this).next().prepend('<li class="list-group-item">' +
                     '<p class="specs">Timer</p>' +
                     '<p class="ml-auto mb-0">' +
                     '<select class="form-control custom-focus">' +
@@ -290,7 +291,6 @@ var api;
                     '</p>'+
                     '<p class="ml-auto mb-0"><button type="button" class="form-control btn btn-primary btn-sm" onclick="api.addTimerDevice(this)">+</button></p>' +
                     '</li>')
-                if(!$(this).is(":hidden")){
                     $(this).hide();
                 }
             })
