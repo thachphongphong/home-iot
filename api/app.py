@@ -454,12 +454,13 @@ def hydroChartLog():
         app.logger.debug("Token is invalid")
         abort(404)
     try:
-        start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        start = datetime.now().astimezone(pytz.timezone("Asia/Ho_Chi_Minh")).replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(1)
+
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM log WHERE devid = ? AND time >= ? AND time < ? ORDER BY time", ('sonoff1', start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
+        rs = cur.execute("SELECT * FROM log WHERE devid = ? AND time >= ? AND time < ? ORDER BY time", ('sonoff1', start.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S'), end.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')))
         series = []
         labels = []
         tdelta = 0
@@ -467,9 +468,9 @@ def hydroChartLog():
         ts = te = None
         for row in rs:
             if(row[1] == 1):
-                 ts = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S')
+                 ts = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S').astimezone(pytz.timezone("Asia/Ho_Chi_Minh"))
             elif(row[1] == 0):
-                te = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S')
+                te = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S').astimezone(pytz.timezone("Asia/Ho_Chi_Minh"))
                 if ts is not None:
                     tdelta += (te - ts).total_seconds()
                     map.setdefault(ts.strftime('%H:%M'),tdelta)
