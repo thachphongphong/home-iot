@@ -281,6 +281,7 @@
 
             socket.on('mqtt_message', function(data) {
                 api.getStatus();
+                api.drawLightChart();
             })
 
             // Draw bar chart

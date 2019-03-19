@@ -14,7 +14,7 @@
                 <div class="card-body d-flex flex-row justify-content-start">
                     <svg class="icon-sprite">
                         <use class="glow" fill="url(#radial-glow)" xlink:href="/static/images/icons-sprite.svg#glow"/>
-                        <use xlink:href="/static/images/icons-sprite.svg#bulb-eco"/>
+                        <use xlink:href="/static/images/icons-sprite.svg#hydroponic"/>
                     </svg>
                     <h5>Pumper</h5>
                     <label class="switch ml-auto">
@@ -224,6 +224,7 @@
 
             socket.on('mqtt_message', function(data) {
                 api.getStatus();
+                api.drawHydroponicChart();
             })
 
             // Draw bar chart
