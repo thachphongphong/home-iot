@@ -28,10 +28,13 @@
 - gunicorn --worker-class eventlet --log-level debug --bind 0.0.0.0:500 app
 
 ## docker
+- docker volume create --name mqtt_data
+
+- docker run --name mqtt --restart=always --net=host -tid -v /mqtt/config/mosquitto.conf:/mqtt/config/mosquitto.conf -v /mqtt/log:/mqtt/log -v mqtt_data:/mqtt/data/ toke/mosquitto
 
 ### api
 -  docker run -dit --net=host -p 5000:5000 -v {{PATH}}/api:/home/iot  
    {{PATH}}/iot.db:/home/iot/iot.db iot-api
-### api
-- docker run -dit --net=host --name=scheduler 
+### scheduler
+- docker run -dit --name=scheduler 
 -v {{PATH}}/scheduler:/home/iot {{PATH}}/iot.db:/home/iot/iot.db iot-scheduler
