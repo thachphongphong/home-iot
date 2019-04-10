@@ -164,6 +164,13 @@ def hydroponic():
     else:
         return render_template('hydroponic.html')
 
+@app.route('/settings')
+def settings():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    else:
+        return render_template('settings.html')
+
 @app.route('/iot')
 def index():
     return 'UP'

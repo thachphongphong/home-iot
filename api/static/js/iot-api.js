@@ -77,20 +77,20 @@ var api;
         convertDevId: function (id) {
             switch (id) {
                 //Exterior
-                case 'switch-light-6':
+                case 'switch-light-1':
                     return 'sonoff2';
                 case 'switch-pumper':
                     return 'sonoff1';
                 case 'switch-valve':
                     return 'sonoff-valve';
-                case 'switch-ex-lights':
-                    return ['sonoff1']
+                case 'switch-lights':
+                    return ['sonoff2']
                 //Interior
-                case 'switch-light-1':
-                case 'switch-light-2':
-                case 'switch-light-3':
-                case 'switch-light-4':
-                case 'switch-light-5':
+                // case 'switch-light-6':
+                // case 'switch-light-2':
+                // case 'switch-light-3':
+                // case 'switch-light-4':
+                // case 'switch-light-5':
                 default:
                     return '';
             }
@@ -99,7 +99,7 @@ var api;
             switch (devId) {
                 //Exterior
                 case 'sonoff2':
-                    return 'switch-light-6';
+                    return 'switch-light-1';
                 case 'sonoff1':
                     return 'switch-pumper';
                 case 'sonoff-valve':
