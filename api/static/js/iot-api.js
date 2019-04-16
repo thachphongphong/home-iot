@@ -391,7 +391,7 @@ var api;
                             }
                         },
                         height: 240,
-                        high: 120,
+                        high: 200,
                         low: 0,
                         // scaleMinSpace: 6,
                         // onlyInteger: false,
