@@ -1,0 +1,20 @@
+.table-controls{
+    float: left;
+}
+.table-controls button{
+    margin-right:  0.5rem;
+}
+
+.dataTables_filter{
+    float: none !important;
+    text-align: right;
+}
+
+.form-control{
+    background-color: white;
+    background-clip: border-box;
+}
+
+.modal-cat > option[selected], .modal-status > option[selected] {
+    display: none !important;
+  }

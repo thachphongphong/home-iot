@@ -184,6 +184,7 @@ def login():
         if checkUser(username, password):
             app.logger.debug("Login with %s", username)
             session['logged_in'] = True
+            session['username'] = username
             return redirect(url_for('start'))
         else:
             app.logger.debug("Login is invalid")
@@ -499,6 +500,85 @@ def hydroChartLog():
         return json.dumps({'labels': labels, 'series': series})
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
+    return ""
+
+@app.route('/api/v1.0/device', methods=['GET'])
+def get_devices():
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    try:
+        username = session.get('username');
+        if username is not None:
+            app.logger.debug("Get devices for user: %s" % username)
+            db = get_db()
+            db.row_factory = sql.Row
+            cur = db.cursor()
+            rs = cur.execute("SELECT * FROM device WHERE username=?", (username,))
+            items = []
+            for row in rs:
+                items.append({'devId': row[1], 'name': row[2], 'status': row[3], 'power': row[4], 'vol': row[5], 'cat': row[6]})
+            return json.dumps({'data': items})
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return ""
+
+@app.route('/api/v1.0/device', methods=['POST'])
+def add_device():
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    try:
+        username = session.get('username');
+        data = request.json
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM device WHERE username=? AND devId=?", (username, data['devId']))
+        row = cur.fetchall()
+        if len(row)==0:
+            app.logger.debug("Add new device %s", data)
+            cur.execute("INSERT INTO device VALUES(?,?,?,?,?,?,?)", (username, data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat']))  
+        else:
+            app.logger.debug("Update device %s", data)
+            cur.execute("UPDATE device SET devId=?, name=?, status=?, power=?, vol=?, cat=? WHERE username=? AND devId=?", (data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat'], username, data['devId']))
+        db.commit()
+        app.logger.debug("Record successfully added %s", data)
+        return json.dumps({'devId': data['devId'], 'name': data['name'], 'status': data['status'], 'power': data['power'], 'vol': data['vol'], 'cat': data['cat']})
+    except sql.Error as e:
+        db.rollback()
+        app.logger.debug("Database error: %s" % e)
+    except Exception as e:
+        db.rollback()
+        app.logger.debug("Exception in _query: %s" % e)
+    # finally:
+    #     db.close()
+    return ""
+
+@app.route('/api/v1.0/device/<devId>', methods=['DELETE'])
+def delete_device(devId):
+    if not checkToken(request):
+        app.logger.debug("Token is invalid")
+        abort(404)
+    try:
+        username = session.get('username');
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM device WHERE devId=? AND username=?", (devId,username))
+        row = cur.fetchone()
+        if not row is None:
+            app.logger.debug("Delete device %s %s" % (devId, username))
+            cur.execute("DELETE FROM device WHERE devId=? AND username=?", (devId,username))
+            db.commit()
+            app.logger.debug("Record successfully deleted %s", devId)
+            return devId
+    except sql.Error as e:
+        db.rollback()
+        app.logger.debug("Database error: %s" % e)
+    except Exception as e:
+        db.rollback()
+        app.logger.debug("Exception in _query: %s" % e)
+    # finally:
+    #     db.close()
     return ""
 
 def checkHasKey(d, map):

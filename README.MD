@@ -7,6 +7,8 @@
 - INSERT INTO status (devId, status) VALUES ('sonoff1', 0);
 - INSERT INTO status (devId, status) VALUES ('sonoff2', 0);
 - INSERT INTO status (devId, status) VALUES ('sonoff-valve', 1);
+- CREATE TABLE device (username varchar(20) NOT NULL, devId varchar(20) NOT NULL, name varchar(20) NOT NULL, status int NOT NULL, power int NOT NULL, vol int NOT NULL, cat varchar(20) NOT NULL);
+- INSERT INTO device (username, devId, name, status, power, vol, cat) VALUES ('ldt', 'sonoff1', 'Front door', 1, 24, 220, 'light');
 
 ## Install
 - sudo apt-get install python-dev

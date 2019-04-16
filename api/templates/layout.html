@@ -97,6 +97,77 @@
             </div>
         </div>
     </div>
+
+    <!-- Update Modal -->
+    <div class="modal modal-nobg centered fade" id="updateModal" tabindex="-1" role="dialog" aria-label="Update">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                    <form class="needs-validation" novalidate>
+                <div class="modal-body">
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Device Id</span>
+                            </div>
+                            <input type="text" class="form-control" aria-label="Device Id" id="modal-devId" aria-describedby="inputGroup-sizing-sm" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid id.
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Name</span>
+                            </div>
+                            <input type="text" class="form-control" aria-label="Name" id="modal-name" aria-describedby="inputGroup-sizing-sm" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid name.
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Connection</span>
+                            </div>
+                            <select aria-label="Connection" id="modal-status" class="form-control" aria-describedby="inputGroup-sizing-sm" required>
+                                <option value="1" selected>ON</option>
+                                <option value="0">OFF</option>
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Power Consumption</span>
+                            </div>
+                            <input type="number" min="0" class="form-control" aria-label="Power Consumption" id="modal-power" aria-describedby="inputGroup-sizing-sm" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid number.
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Voltage range</span>
+                            </div>
+                            <input type="number" class="form-control" aria-label="Voltage range" id="modal-vol" aria-describedby="inputGroup-sizing-sm" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid number.
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Category</span>
+                            </div>
+                            <select aria-label="Category" id="modal-cat" class="form-control" aria-describedby="inputGroup-sizing-sm" required>
+                                <option value="light" selected>Light</option>
+                                <option value="other" >Other</option>
+                            </select>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary device-update">Update</button>
+                    <button type="button" class="btn btn-secondary device-close" data-dismiss="modal">Close</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Wrapper START -->
 
     <div id="wrapper" class="hidden">

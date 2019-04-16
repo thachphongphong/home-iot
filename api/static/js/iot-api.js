@@ -433,6 +433,96 @@ var api;
 
                 }
             });
+        },
+        tableAction: function (action, data) {
+            switch (action) {
+                case 'add':
+                    a("#updateModal").modal("show"); 
+                    a("#modal-devId").val('');
+                    a("#modal-name").val('');
+                    a("#modal-status").val(1);
+                    a("#modal-power").val(0);
+                    a("#modal-vol").val(220);
+                    a("#modal-cat").val('light');
+                    a("#updateModal .device-update").text("Add");
+                    break;
+                case 'update':
+                    if(data){
+                        a("#updateModal").modal("show"); 
+                        a("#modal-devId").val(data.devId);
+                        a("#modal-name").val(data.name);
+                        a("#modal-status").val(data.status);
+                        a("#modal-power").val(data.power);
+                        a("#modal-vol").val(data.vol);
+                        a("#modal-cat").val(data.cat);
+                        a("#updateModal .device-update").text("Update");
+                    }else{
+                        alert('Please selete a row to update!')
+                    }
+                    break;
+                case 'delete':
+                    if(data){
+                        var devId = data.devId;
+                        a("#confModal").modal("show"), a("#confModal .timer").text(devId);
+                        a("#confModal .timer-delete").bind( "click", function() {
+                            api.deleteDevice(devId)
+                            $(this).unbind( "click" );
+                            a("#confModal").modal("hide")
+                        });
+                        a("#confModal .timer-close").bind( "click", function() {
+                            a("#confModal .timer-delete").unbind( "click" );
+                        });
+                    }else{
+                        alert('Please selete a row to delete!')
+                    }
+                    break;
+                default:
+                    return '';
+            }
+        },
+        addOrUpdateDevice:function(){
+            var dev = {};
+            dev.devId = a("#modal-devId").val();
+            dev.name = a("#modal-name").val();
+            dev.status = a("#modal-status").val();
+            dev.power = a("#modal-power").val();
+            dev.vol = a("#modal-vol").val();
+            dev.cat = a("#modal-cat").val();
+            api.addDevice(dev);
+        },
+        addDevice: function(dev){
+            $.ajax({
+                url: '/api/v1.0/device',
+                data: JSON.stringify(dev),
+                contentType: "application/json",
+                type: 'POST',
+                success: function(data) {
+                    console.log(data);
+                    var _row = iot_table.row('.selected').data();
+                    if(typeof _row != "undefined"){
+                        iot_table.row('.selected').data(JSON.parse(data)).draw();
+                    }else{
+                        iot_table.row.add(JSON.parse(data)).draw();
+                    }
+                    a("#updateModal").modal("hide")
+                },
+                error: function (error) {
+                    alert('Cannot add device!')
+                    a("#updateModal").modal("hide")
+                }
+            });
+        },
+        deleteDevice: function(devId){
+            $.ajax({
+                url: '/api/v1.0/device/'+devId,
+                type: 'DELETE',
+                success: function(data) {
+                    iot_table.row('.selected').remove().draw( false );
+                },
+                error: function (error) {
+                    alert('Cannot delete device!')
+                }
+            });
         }
     }, window.api = b
 }(this.jQuery);
