@@ -19,6 +19,7 @@
 
 
 var api;
+var _IOTdevices_
 !function (a) {
     "use strict";
     $.ajaxSetup({
@@ -75,44 +76,10 @@ var api;
             });
         },
         convertDevId: function (id) {
-            switch (id) {
-                //Exterior
-                case 'switch-light-1':
-                    return 'sonoff2';
-                case 'switch-pumper':
-                    return 'sonoff1';
-                case 'switch-valve':
-                    return 'sonoff-valve';
-                case 'switch-lights':
-                    return ['sonoff2']
-                //Interior
-                // case 'switch-light-6':
-                // case 'switch-light-2':
-                // case 'switch-light-3':
-                // case 'switch-light-4':
-                // case 'switch-light-5':
-                default:
-                    return '';
-            }
+            return id.replace('switch-','');
         },
         revertId: function (devId) {
-            switch (devId) {
-                //Exterior
-                case 'sonoff2':
-                    return 'switch-light-1';
-                case 'sonoff1':
-                    return 'switch-pumper';
-                case 'sonoff-valve':
-                    return 'switch-valve';
-                //Interior
-                // case 'switch-light-1':
-                // case 'switch-light-2':
-                // case 'switch-light-3':
-                // case 'switch-light-4':
-                // case 'switch-light-5':
-                default:
-                    return '';
-            }
+            return 'switch-'+devId;
         },
         revertName: function (devId) {
             switch (devId) {
@@ -444,6 +411,7 @@ var api;
                     a("#modal-power").val(0);
                     a("#modal-vol").val(220);
                     a("#modal-cat").val('light');
+                    a("#modal-icon").val('light');
                     a("#updateModal .device-update").text("Add");
                     break;
                 case 'update':
@@ -455,6 +423,7 @@ var api;
                         a("#modal-power").val(data.power);
                         a("#modal-vol").val(data.vol);
                         a("#modal-cat").val(data.cat);
+                        a("#modal-icon").val(data.icon);
                         a("#updateModal .device-update").text("Update");
                     }else{
                         alert('Please selete a row to update!')
@@ -488,6 +457,7 @@ var api;
             dev.power = a("#modal-power").val();
             dev.vol = a("#modal-vol").val();
             dev.cat = a("#modal-cat").val();
+            dev.icon = a("#modal-icon").val();
             api.addDevice(dev);
         },
         addDevice: function(dev){

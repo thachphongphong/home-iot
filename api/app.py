@@ -41,8 +41,6 @@ app.config['MQTT_KEEPALIVE'] = 5
 app.config['MQTT_TLS_ENABLED'] = False
 
 env_profile = config['DEFAULT']['ENV_PROFILE']
-
-devices = ["sonoff1","sonoff2","sonoff-valve"]
 schedule_topic = "topic/schedule"
 
 mqtt = Mqtt(app)
@@ -58,8 +56,8 @@ def handle_mqtt_message(client, userdata, message):
         qos=message.qos,
     )
     app.logger.debug("on_message %s: %s: %s " % (client, userdata, data['payload']))
-    for id in devices:
-        topic = "stat/"+id+"/POWER"
+    for dev in get_devices():
+        topic = "stat/"+dev['devId']+"/POWER"
         if(topic == data['topic']):
             app.logger.debug("topic status change  %s: %s " % (topic, data['payload']))
             status = 1 if data['payload'].lower() == 'on' else 0;
@@ -67,10 +65,10 @@ def handle_mqtt_message(client, userdata, message):
                 try:
                     db = get_db()
                     cur = db.cursor()
-                    cur.execute("UPDATE status SET status=? WHERE devId=?", (status, id))
-                    cur.execute("INSERT INTO log VALUES(?,?,?)", (id, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                    cur.execute("UPDATE status SET status=? WHERE devId=?", (status, dev['devId']))
+                    cur.execute("INSERT INTO log VALUES(?,?,?)", (dev['devId'], status, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                     db.commit()
-                    app.logger.debug("Success update status db  %s: %s " % (id, status))
+                    app.logger.debug("Success update status db  %s: %s " % (dev['devId'], status))
                 except sql.Error as e:
                     app.logger.debug("Database error: %s" % e)
             socketio.emit('mqtt_message')
@@ -98,17 +96,34 @@ def handle_mqtt_message(client, userdata, message):
 
 ## FUNCTION ##
 
+def get_devices():
+    devices = []
+    if session.get('devices'):
+        for dev in session.get('devices'):
+            devices.append(
+                dict(username = dev[0],
+            devId = dev[1],
+                name = dev[2],
+                status = dev[3], 
+                power = dev[4],
+                vol = dev[5],
+                cat = dev[6],
+                icon = dev[7]
+                )
+            )
+    return devices
+
 def checkToken(request):
     token = request.headers.get('Authorization')
     if(token == 'Bearer hWd3uNMVpjaRAbPs9Nt3'):
         return True
     return False
 
-def checkDevice(d):
-    if d in devices:
-        return True
-    else:
-        return False
+def checkDevice(id):
+    for dev in get_devices():
+        if id == dev['devId']:
+            return True
+    return False
 
 def get_status(s):
     if s == 1:
@@ -134,13 +149,28 @@ def get_db():
     return db
 
 def checkUser(username, password):
-    app.logger.debug("Login with %s - %s" % (username,password))
-    cur = get_db().cursor()
-    cur = cur.execute("SELECT * FROM user WHERE username=? AND password=?", (username,password))
-    data = cur.fetchone()
-    if data is None:
-        return False
-    return True
+    app.logger.debug("Login with %s - %s" % (username, 'xxxxxxxxx'))
+    try:
+        cur = get_db().cursor()
+        cur = cur.execute("SELECT * FROM user WHERE username=? AND password=?", (username,password))
+        data = cur.fetchone()
+        if data is not None:
+            return True
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return False;
+
+
+def getUserDevice(username):
+    app.logger.debug("Load devices for user %s" % (username,))
+    try:
+        cur = get_db().cursor()
+        cur = cur.execute("SELECT * FROM device WHERE username=?", (username,))
+        devices = cur.fetchall()
+        return devices
+    except sql.Error as e:
+        app.logger.debug("Database error: %s" % e)
+    return [];
 
 ## FRONT END ##
 @app.route('/')
@@ -148,7 +178,14 @@ def start():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     else:
-        return render_template('home.html')
+        lights = []
+        others = []
+        for dev in get_devices():
+            if(dev['cat'] == 'light'):
+                lights.append(dev)
+            else:
+                others.append(dev)
+        return render_template('home.html', lights = lights, others = others)
 
 @app.route('/lights')
 def lights():
@@ -185,6 +222,7 @@ def login():
             app.logger.debug("Login with %s", username)
             session['logged_in'] = True
             session['username'] = username
+            session['devices'] = getUserDevice(username)
             return redirect(url_for('start'))
         else:
             app.logger.debug("Login is invalid")
@@ -242,26 +280,30 @@ def post_light_status(devId):
     if (data is None or data['status'] is None):
         app.logger.debug("Status is missing")
         abort(500)
-    try:
-        db = get_db()
-        db.row_factory = sql.Row
-        cur = db.cursor()
-        rs = cur.execute("SELECT * FROM status WHERE devId=?", (devId,))
-        row = rs.fetchone()
-        if row is None:
-            app.logger.debug("Device not found %s", (devId))
-            abort(404)
-        if( data['status'] != row[1]):
-            topic = "cmnd/"+devId+"/power"
-            status = 'on' if data['status'] == 1 else 'off';
-            app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status))
-            mqtt.publish(topic, status, 2)
-            if env_profile == 'LOCAL':
-                mqtt.publish("stat/"+devId+"/POWER", status, 2)
-                # socketio.emit('mqtt_message')
-        return json.dumps({'devId': row[0], 'status': data['status']})
-    except sql.Error as e:
-        app.logger.debug("Database error: %s" % e)
+    if checkDevice(devId):
+        try:
+            db = get_db()
+            db.row_factory = sql.Row
+            cur = db.cursor()
+            rs = cur.execute("SELECT * FROM status WHERE devId=?", (devId,))
+            row = rs.fetchone()
+            if row is None:
+                cur.execute("INSERT INTO status VALUES(?,?)",(devId,0))
+                db.commit()
+            elif(data['status'] != row[1]):
+                topic = "cmnd/"+devId+"/power"
+                status = 'on' if data['status'] == 1 else 'off';
+                app.logger.debug("POST /api/v1.0/%s: %s" % (topic, status))
+                mqtt.publish(topic, status, 2)
+                if env_profile == 'LOCAL':
+                    mqtt.publish("stat/"+devId+"/POWER", status, 2)
+                    # socketio.emit('mqtt_message')
+            return json.dumps({'devId': devId, 'status': data['status']})
+        except sql.Error as e:
+            app.logger.debug("Database error: %s" % e)
+    else:
+        app.logger.debug("Device not found %s", (devId))
+        abort(404)
     return ''
 
 @app.route('/api/v1.0/status', methods=['GET'])
@@ -284,9 +326,10 @@ def get_all_status():
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
-    for id in devices:
-       app.logger.debug("Subscribe device topic %s" % id)
-       mqtt.subscribe("stat/"+id+"/POWER", 0)
+    app.logger.debug("MQTT is connected")
+    # for dev in get_devices():
+    #    app.logger.debug("Subscribe device topic %s" % id)
+    #    mqtt.subscribe("stat/"+dev.devId+"/POWER", 0)
 
 @app.route('/api/v1.0/timer', methods=['GET'])
 def get_timers():
@@ -503,7 +546,7 @@ def hydroChartLog():
     return ""
 
 @app.route('/api/v1.0/device', methods=['GET'])
-def get_devices():
+def get_user_devices():
     if not checkToken(request):
         app.logger.debug("Token is invalid")
         abort(404)
@@ -517,7 +560,7 @@ def get_devices():
             rs = cur.execute("SELECT * FROM device WHERE username=?", (username,))
             items = []
             for row in rs:
-                items.append({'devId': row[1], 'name': row[2], 'status': row[3], 'power': row[4], 'vol': row[5], 'cat': row[6]})
+                items.append({'devId': row[1], 'name': row[2], 'status': row[3], 'power': row[4], 'vol': row[5], 'cat': row[6], 'icon': row[7]})
             return json.dumps({'data': items})
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
@@ -537,13 +580,13 @@ def add_device():
         row = cur.fetchall()
         if len(row)==0:
             app.logger.debug("Add new device %s", data)
-            cur.execute("INSERT INTO device VALUES(?,?,?,?,?,?,?)", (username, data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat']))  
+            cur.execute("INSERT INTO device VALUES(?,?,?,?,?,?,?,?)", (username, data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat'], data['icon']))  
         else:
             app.logger.debug("Update device %s", data)
-            cur.execute("UPDATE device SET devId=?, name=?, status=?, power=?, vol=?, cat=? WHERE username=? AND devId=?", (data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat'], username, data['devId']))
+            cur.execute("UPDATE device SET devId=?, name=?, status=?, power=?, vol=?, cat=?, icon=? WHERE username=? AND devId=?", (data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat'], data['icon'], username, data['devId']))
         db.commit()
         app.logger.debug("Record successfully added %s", data)
-        return json.dumps({'devId': data['devId'], 'name': data['name'], 'status': data['status'], 'power': data['power'], 'vol': data['vol'], 'cat': data['cat']})
+        return json.dumps({'devId': data['devId'], 'name': data['name'], 'status': data['status'], 'power': data['power'], 'vol': data['vol'], 'cat': data['cat'], 'icon': data['icon']})
     except sql.Error as e:
         db.rollback()
         app.logger.debug("Database error: %s" % e)
@@ -560,7 +603,7 @@ def delete_device(devId):
         app.logger.debug("Token is invalid")
         abort(404)
     try:
-        username = session.get('username');
+        username = session.get('username')
         db = get_db()
         cur = db.cursor()
         cur.execute("SELECT * FROM device WHERE devId=? AND username=?", (devId,username))

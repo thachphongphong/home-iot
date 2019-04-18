@@ -158,6 +158,23 @@
                                 <option value="other" >Other</option>
                             </select>
                         </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Icon</span>
+                            </div>
+                            <select aria-label="Icon" id="modal-icon" class="form-control" aria-describedby="inputGroup-sizing-sm" required>
+                                <option value="bulb-eco" selected>Light</option>
+                                <option value="appliances" >Appliances</option>
+                                <option value="camera" >Camera</option>
+                                <option value="fan" >Fan</option>
+                                <option value="camera" >Appliances</option>
+                                <option value="home-fridge" >Fridge</option>
+                                <option value="tv-lcd" >TV</option>
+                                <option value="wash-machine" >Wash-machine</option>
+                                <option value="hydroponic" >Hydroponic</option>
+                                <option value="valve" >Valve</option>
+                            </select>
+                        </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary device-update">Update</button>
@@ -323,6 +340,7 @@
         </defs>
     </svg>
     {% block js %}
+    {{js|safe}}
     <!-- jQuery -->
     <script src="/static/js/jquery-3.3.1.min.js"></script>
 
@@ -346,7 +364,11 @@
 
     <script>
        $(document).ready(function() {
-
+            if (localStorage) {
+                localStorage.setItem('_IOTdevices_', '{{session["devices"]|tojson}}');
+                // _IOTdevices_
+				_IOTdevices_ = JSON.parse(localStorage.getItem('_IOTdevices_')) || {};
+            }
             // Contract/expand side menu on click. (only large screens)
             $('#minifier').click(function() {
 

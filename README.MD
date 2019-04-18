@@ -9,7 +9,7 @@
 - INSERT INTO status (devId, status) VALUES ('sonoff-valve', 1);
 - CREATE TABLE device (username varchar(20) NOT NULL, devId varchar(20) NOT NULL, name varchar(20) NOT NULL, status int NOT NULL, power int NOT NULL, vol int NOT NULL, cat varchar(20) NOT NULL);
 - INSERT INTO device (username, devId, name, status, power, vol, cat) VALUES ('ldt', 'sonoff1', 'Front door', 1, 24, 220, 'light');
-
+- ALTER TABLE device ADD COLUMN icon varchar(15);
 ## Install
 - sudo apt-get install python-dev
 - sudo pip install virtualenv
