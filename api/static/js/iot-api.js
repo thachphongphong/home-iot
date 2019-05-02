@@ -246,7 +246,7 @@ var _IOTdevices_
             });
         },
         showAddTimter: function () {
-            $('[id^=spinner-switch-]').each(function() {
+            $('[id^=spinner-]').each(function() {
                 if(!$(this).is(":hidden")){
                     $(this).next().prepend('<li class="list-group-item">' +
                     '<p class="specs">Timer</p>' +

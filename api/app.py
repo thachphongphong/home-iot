@@ -7,6 +7,7 @@ import json
 import os.path
 import configparser
 import sqlite3 as sql
+import re
 
 import pytz
 from flask import Flask, render_template, g, request, abort, session, redirect, url_for
@@ -48,6 +49,13 @@ socketio = SocketIO(app)
 bootstrap = Bootstrap(app)
 
 ## MQTT ##
+@mqtt.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    app.logger.debug("MQTT is connected")
+    # for dev in get_devices():
+    #    app.logger.debug("Subscribe device topic %s" % id)
+    #    mqtt.subscribe("stat/"+dev.devId+"/POWER", 0)
+
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
     data = dict(
@@ -55,23 +63,22 @@ def handle_mqtt_message(client, userdata, message):
         payload=message.payload.decode(),
         qos=message.qos,
     )
-    app.logger.debug("on_message %s: %s: %s " % (client, userdata, data['payload']))
-    for dev in get_devices():
-        topic = "stat/"+dev['devId']+"/POWER"
-        if(topic == data['topic']):
-            app.logger.debug("topic status change  %s: %s " % (topic, data['payload']))
-            status = 1 if data['payload'].lower() == 'on' else 0;
-            with app.app_context():
-                try:
-                    db = get_db()
-                    cur = db.cursor()
-                    cur.execute("UPDATE status SET status=? WHERE devId=?", (status, dev['devId']))
-                    cur.execute("INSERT INTO log VALUES(?,?,?)", (dev['devId'], status, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                    db.commit()
-                    app.logger.debug("Success update status db  %s: %s " % (dev['devId'], status))
-                except sql.Error as e:
-                    app.logger.debug("Database error: %s" % e)
-            socketio.emit('mqtt_message')
+    app.logger.debug("on_message %s: %s: %s " % (data['topic'], data['payload'], data['qos']))
+    with app.app_context():
+        try:
+            app.logger.debug("Message receive: %s" % data['topic'])
+            # Can check by query to db
+            if(re.match("stat/.*/POWER", data['topic'])):
+                devId = data['topic'].replace("stat/","").replace("/POWER","")
+                status = 1 if data['payload'].lower() == 'on' else 0;
+                db = get_db()
+                cur = db.cursor()
+                cur.execute("UPDATE status SET status=? WHERE devId=?", (status, devId))
+                cur.execute("INSERT INTO log VALUES(?,?,?)", (devId, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                db.commit()
+        except sql.Error as e:
+            app.logger.debug("Database error: %s" % e)
+        socketio.emit('mqtt_message')
 
 # @mqtt.on_log()
 # def handle_logging(client, userdata, level, buf):
@@ -95,14 +102,21 @@ def handle_mqtt_message(client, userdata, message):
 #         mqtt.subscribe(data['topic'], data['qos'])
 
 ## FUNCTION ##
+def subscribe():
+    for dev in get_devices():
+       mqtt.subscribe("stat/"+dev['devId']+"/POWER", 0)
+
+def un_subscribe():
+    for dev in get_devices():
+       mqtt.unsubscribe("stat/"+dev['devId']+"/POWER", 0)
 
 def get_devices():
     devices = []
     if session.get('devices'):
-        for dev in session.get('devices'):
+        for dev in session.get('devices',[]):
             devices.append(
                 dict(username = dev[0],
-            devId = dev[1],
+                devId = dev[1],
                 name = dev[2],
                 status = dev[3], 
                 power = dev[4],
@@ -112,6 +126,13 @@ def get_devices():
                 )
             )
     return devices
+
+def get_devices_by_cat(cat):
+    cats = []
+    for dev in get_devices():
+        if(dev['cat'] == cat):
+            cats.append(dev)
+    return cats
 
 def checkToken(request):
     token = request.headers.get('Authorization')
@@ -192,7 +213,7 @@ def lights():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     else:
-        return render_template('lights.html')
+        return render_template('lights.html', lights = get_devices_by_cat('light'))
 
 @app.route('/hydroponic')
 def hydroponic():
@@ -223,6 +244,7 @@ def login():
             session['logged_in'] = True
             session['username'] = username
             session['devices'] = getUserDevice(username)
+            subscribe()
             return redirect(url_for('start'))
         else:
             app.logger.debug("Login is invalid")
@@ -233,7 +255,8 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session['logged_in'] = False
+    un_subscribe()
+    session.clear()
     return redirect(url_for('login'))
 
 @app.template_filter()
@@ -323,13 +346,6 @@ def get_all_status():
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
     return ""
-
-@mqtt.on_connect()
-def handle_connect(client, userdata, flags, rc):
-    app.logger.debug("MQTT is connected")
-    # for dev in get_devices():
-    #    app.logger.debug("Subscribe device topic %s" % id)
-    #    mqtt.subscribe("stat/"+dev.devId+"/POWER", 0)
 
 @app.route('/api/v1.0/timer', methods=['GET'])
 def get_timers():
