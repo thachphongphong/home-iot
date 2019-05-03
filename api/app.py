@@ -108,7 +108,7 @@ def subscribe():
 
 def un_subscribe():
     for dev in get_devices():
-       mqtt.unsubscribe("stat/"+dev['devId']+"/POWER", 0)
+       mqtt.unsubscribe("stat/"+dev['devId']+"/POWER")
 
 def get_devices():
     devices = []
@@ -220,7 +220,7 @@ def hydroponic():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     else:
-        return render_template('hydroponic.html')
+        return render_template('hydroponic.html', hydro = get_devices_by_cat('hydroponic'))
 
 @app.route('/settings')
 def settings():
@@ -338,10 +338,20 @@ def get_all_status():
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM status")
-        items = []
+        args = [] 
+        for d in get_devices():
+            args.append(d['devId'])
+        query = "SELECT * FROM status where devId in ({seq})".format(seq=','.join(['?']*len(args)))
+        rs = cur.execute(query, args)
+        map = {}
         for row in rs:
-            items.append({'devId': row[0], 'status': row[1]})
+            map.setdefault(row[0],row[1])
+        items = []
+        for d in get_devices():
+            status = 0
+            if(d['devId'] in map):
+                status = map[d['devId']]
+            items.append({'devId': d['devId'], 'status': status, 'cat': d['cat']})
         return json.dumps(items)
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)

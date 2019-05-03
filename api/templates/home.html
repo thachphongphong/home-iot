@@ -14,13 +14,13 @@
             </div>
             {% for light in lights %}
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex active" data-unit="switch-{{ light['devId'] }}">
+                <li class="list-group-item d-flex active" data-unit="switch-{{ light['cat'] }}-{{ light['devId'] }}">
                     <svg class="icon-sprite">
                         <use xlink:href="/static/images/icons-sprite.svg#{{ light['icon'] }}"/>
                     </svg>
                     <h5>{{ light['name'] }}</h5>
                     <label class="switch ml-auto checked">
-                        <input type="checkbox" id="switch-{{ light['devId'] }}" checked>
+                        <input type="checkbox" id="switch-{{ light['cat'] }}-{{ light['devId'] }}" checked>
                     </label>
                 </li>
             </ul>
@@ -44,14 +44,14 @@
             </div>
         </div>
         {% for other in others %}
-        <div class="card" data-unit="switch-{{ other['devId'] }}">
+        <div class="card" data-unit="switch-{{ other['cat'] }}-{{ other['devId'] }}">
             <div class="card-body d-flex">
                 <svg class="icon-sprite">
                     <use xlink:href="/static/images/icons-sprite.svg#{{ other['icon'] }}"/>
                 </svg>
                 <h5>{{ other['name'] }}</h5>
                 <label class="switch ml-auto">
-                    <input type="checkbox" id="switch-{{ other['devId'] }}">
+                    <input type="checkbox" id="switch-{{ other['cat'] }}-{{ other['devId'] }}">
                 </label>
             </div>
         </div>

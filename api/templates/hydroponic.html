@@ -7,18 +7,19 @@
     <link href="/static/css/iot-light.css" rel="stylesheet">
 {% endblock %}
 {% block content %}
+{% if hydro %}
     <!-- Exterior START -->
-    <div class="row" data-unit-group="switch-lights-ex">
+    <div class="row" data-unit-group="switch-hydroponics">
+        {% for hyd in hydro %}
         <div class="col-sm-12 col-md-6 col-xl-4">
-            <div class="card" data-unit="switch-pumper">
+            <div class="card" data-unit="switch-hydroponic-{{ hyd['devId'] }}">
                 <div class="card-body d-flex flex-row justify-content-start">
                     <svg class="icon-sprite">
-                        <use class="glow" fill="url(#radial-glow)" xlink:href="/static/images/icons-sprite.svg#glow"/>
-                        <use xlink:href="/static/images/icons-sprite.svg#hydroponic"/>
+                        <use xlink:href="/static/images/icons-sprite.svg#{{ hyd['icon'] }}"/>
                     </svg>
-                    <h5>Pumper</h5>
+                    <h5>{{ hyd['name'] }}</h5>
                     <label class="switch ml-auto">
-                        <input type="checkbox" id="switch-pumper">
+                        <input type="checkbox" id="switch-hydroponic-{{ hyd['devId'] }}"">
                     </label>
                 </div>
                 <!-- Light switch END -->
@@ -27,15 +28,19 @@
                 <ul class="list-group borderless px-1">
                     <li class="list-group-item">
                         <p class="specs">Connection</p>
+                        {% if hyd['status'] == 1 %}
                         <p class="ml-auto mb-0 text-success">OK</p>
+                        {% else %}
+                            <p class="ml-auto mb-0 text-danger">NO</p>
+                        {% endif %}
                     </li>
                     <li class="list-group-item pt-0">
                         <p class="specs">Power Consumption</p>
-                        <p class="ml-auto mb-0">28W</p>
+                        <p class="ml-auto mb-0">{{ hyd['power'] }}W</p>
                     </li>
                     <li class="list-group-item pt-0 pb-4">
                         <p class="specs">Voltage range</p>
-                        <p class="ml-auto mb-0">AC-220V</p>
+                        <p class="ml-auto mb-0">{{ hyd['vol'] }}V</p>
                     </li>
                 </ul>
                 <!-- Bulb details END -->
@@ -49,6 +54,7 @@
                 </ul>
             </div>
         </div>
+        {% endfor %}
     </div>
     <!-- Exterior lights END -->
     <hr class="my-2">
@@ -70,6 +76,7 @@
             </div>
         </div>
     </div>
+{% endif %}
 {% endblock %}
 {% block js %}
     {{ super() }}
@@ -84,38 +91,6 @@
         $(document).ready(function() {
 
             var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-            // Switch (checkbox element) toogler
-            $('.switch input[type="checkbox"]').on("change", function(t) {
-
-                // Check the time between changes to prevert Android native browser execute twice
-                // If you dont need support for Android native browser - just call "switchSingle" function
-                if (this.last) {
-
-                    this.diff = t.timeStamp - this.last;
-
-                    // Don't execute if the time between changes is too short (less than 250ms) - Android native browser "twice bug"
-                    // The real time between two human taps/clicks is usually much more than 250ms"
-                    if (this.diff > 250) {
-
-                        this.last = t.timeStamp;
-
-                        api.switchDevice(this.id, this.checked);
-
-                    } else {
-                        return false;
-                    }
-
-                } else {
-
-                    // First attempt on this switch element
-                    this.last = t.timeStamp;
-
-                    api.switchDevice(this.id, this.checked);
-
-                }
-            });
-
 
             $('.clockpicker').clockpicker({
                 placement: 'left',

@@ -1,23 +1,3 @@
-/*
-* switch-house-lock
-* garage-doors-1
-*
-* switch-light-1 - 5 :Interior
-* switch-light-6 - 9 :Exterior
-*  switch-light-6 : sonoff2
-*  switch-pumper : sonoff1
-*  switch-valve : sonoff-valve
-*
-* wash-machine
-* home-fridge
-* tv-lcd
-*
-* switch-camera-1
-* switch-camera-2
-*
-* */
-
-
 var api;
 var _IOTdevices_
 !function (a) {
@@ -33,7 +13,7 @@ var _IOTdevices_
                 if(data){
                     var ja = JSON.parse(data);
                     ja.forEach(function(obj) {
-                        iot.switchSingle(api.revertId(obj.devId), Boolean(obj.status));
+                        iot.switchSingle(api.revertSwitchCatId(obj.cat, obj.devId), Boolean(obj.status));
                     });
 
                 }
@@ -58,28 +38,20 @@ var _IOTdevices_
         },
         switchGroup: function (target, status) {
             var action = (status) ? 1 : 0;
-            $.each( api.convertDevId(target), function(index, value ) {
-                $.ajax({
-                    url: '/api/v1.0/' + value,
-                    data: JSON.stringify({'status': action}),
-                    contentType: "application/json",
-                    type: 'POST',
-                    dataType:"json",
-                    success: function(data) {
-                        iot.switchSingle(api.revertId(data.devId), Boolean(data.status));
-                    },
-                    error: function (error) {
-                        alert('Cannot do action!')
-                        location.reload();
-                    }
-                });
-            });
+            if(api.convertDevId(target) === 'lights'){
+                $('[id^=switch-light-]').each(function(index, value ) {
+                    api.switchDevice(this.id, action)
+                })
+            }
         },
         convertDevId: function (id) {
-            return id.replace('switch-','');
+            return id.replace('switch-','').replace('light-','').replace('other-','');
         },
-        revertId: function (devId) {
+        revertSwitchId: function (devId) {
             return 'switch-'+devId;
+        },
+        revertSwitchCatId: function (cat, devId) {
+            return 'switch-'+cat+'-'+devId;
         },
         revertName: function (devId) {
             switch (devId) {
@@ -106,7 +78,7 @@ var _IOTdevices_
                 if(data){
                     var timers = JSON.parse(data);
                     $.each(timers, function(i, item) {
-                        var _id = api.revertId(item.devId);
+                        var _id = api.revertSwitchId(item.devId);
                         $('#spinner-'+ _id).hide();
                         $('#timer-'+ _id).append(
                         '<li class="list-group-item" data-id="'+item.devId+'" data-timer="'+item.timer+'">'+

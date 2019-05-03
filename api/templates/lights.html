@@ -28,7 +28,7 @@
     <!-- Exterior lights START -->
     {% for light in lights %}
     <div class="col-sm-12 col-md-6 col-xl-4">
-        <div class="card" data-unit="switch-{{ light['devId'] }}">
+        <div class="card" data-unit="switch-light-{{ light['devId'] }}">
             <!-- Light switch START -->
             <div class="card-body d-flex flex-row justify-content-start">
                 <svg class="icon-sprite">
@@ -36,7 +36,7 @@
                 </svg>
                 <h5>{{ light['name'] }}</h5>
                 <label class="switch ml-auto">
-                    <input type="checkbox" id="switch-{{ light['devId'] }}">
+                    <input type="checkbox" id="switch-light-{{ light['devId'] }}">
                 </label>
             </div>
             <!-- Light switch END -->
@@ -111,37 +111,6 @@
         $(document).ready(function() {
 
             var socket = io.connect('http://' + document.domain + ':' + location.port);
-            
-            // Switch (checkbox element) toogler
-            $('.switch input[type="checkbox"]').on("change", function(t) {
-
-                // Check the time between changes to prevert Android native browser execute twice
-                // If you dont need support for Android native browser - just call "switchSingle" function
-                if (this.last) {
-
-                    this.diff = t.timeStamp - this.last;
-
-                    // Don't execute if the time between changes is too short (less than 250ms) - Android native browser "twice bug"
-                    // The real time between two human taps/clicks is usually much more than 250ms"
-                    if (this.diff > 250) {
-
-                        this.last = t.timeStamp;
-
-                        api.switchDevice(this.id, this.checked);
-
-                    } else {
-                        return false;
-                    }
-
-                } else {
-
-                    // First attempt on this switch element
-                    this.last = t.timeStamp;
-
-                    api.switchDevice(this.id, this.checked);
-
-                }
-            });
 
             // All ON/OFF controls
             $('.lights-control').click(function() {
