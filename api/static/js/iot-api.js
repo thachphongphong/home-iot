@@ -64,13 +64,12 @@ var _IOTdevices_
                 if(data){
                     var timers = JSON.parse(data);
                     $.each(timers, function(i, item) {
-                        var _id = api.revertSwitchId(item.devId);
-                        $('#spinner-'+ _id).hide();
-                        $('#timer-'+ _id).append(
+                        $('#spinner-'+ item.devId).hide();
+                        $('#timer-'+ item.devId).append(
                         '<li class="list-group-item" data-id="'+item.devId+'" data-timer="'+item.timer+'">'+
                             '<p class="specs">' + item.period.toUpperCase() +'</p>'+
                             '<p class="ml-auto mb-0">' +
-                            '<select class="form-control timer-mode custom-focus" id="timer-op-'+_id+'-'+item.timer+'">' +
+                            '<select class="form-control timer-mode custom-focus" id="timer-op-'+item.devId+'-'+item.timer+'">' +
                             '<option value="1">ON</option>' +
                             '<option value="0">OFF</option>' +
                             '<option value="2">TOG</option>' +
@@ -85,8 +84,8 @@ var _IOTdevices_
                             '<p class="ml-auto mb-0"><button type="button" class="form-control btn btn-primary btn-sm" onclick="api.confirmModal(this)">X</button></p>' +
                         '</li>'
                         );
-                        $('#timer-op-'+_id+'-'+item.timer).val(item.action);
-                        $('#timer-op-'+_id+'-'+item.timer).change(function() {
+                        $('#timer-op-'+item.devId+'-'+item.timer).val(item.action);
+                        $('#timer-op-'+item.devId+'-'+item.timer).change(function() {
                             var devId = $(this).parents('li').data("id")
                             var timer = $(this).parents('li').data("timer")
                             var action =  $( this ).val()
@@ -119,17 +118,19 @@ var _IOTdevices_
             });
         },
         addTimerDevice: function (t) {
-            var specs = $(t).parents('ul').find('li:last .specs');
-            var timer = 1;
-            if(specs != null && $.isNumeric( $(specs).text() )){
-                timer = parseInt($(specs).text()) + 1;
+            var timer = $(t).parents('ul').children(":last").data('timer');
+            if(typeof timer == 'undefined'){
+                timer = 1;
+            }else{
+                timer = ($.isNumeric(timer)) ? parseInt(timer) + 1 : -1 ;
             }
             var id = $(t).parents('ul').attr("id").replace('timer-','')
             var devId = api.convertDevId(id);
+            var period = $(t).parents('ul').children(":first").find('select').val();
 
             $(t).parents('ul').append(
                 '<li class="list-group-item" data-id="'+devId+'" data-timer="'+timer+'">'+
-                '<p class="specs">'+timer+'</p>'+
+                '<p class="specs">'+period.toUpperCase()+'</p>'+
                 '<p class="ml-auto mb-0">' +
                 '<select class="form-control timer-mode custom-focus" id="timer-op-'+devId+'-'+timer+'">' +
                 '<option value="1">ON</option>' +
@@ -148,7 +149,7 @@ var _IOTdevices_
                 '</p>' +
                 '</li>'
             );
-            $(t).parents('ul').find('li:last .clockpicker').clockpicker({
+            $(t).parents('ul').children(":last").find('.clockpicker').clockpicker({
                 placement: 'left',
                 align: 'left',
                 autoclose: true,
@@ -195,13 +196,16 @@ var _IOTdevices_
             }
         },
         deleteTimerDevice: function (d, t, l) {
-            $.ajax({
-                url: '/api/v1.0/timer/'+d+'/'+t,
-                type: 'DELETE',
-                success: function(result) {
-                    $(l).parents('li').remove();
-                }
-            });
+            if(t != -1){
+                $.ajax({
+                    url: '/api/v1.0/timer/'+d+'/'+t,
+                    type: 'DELETE',
+                    success: function(result) {
+                        $(l).parents('li').remove();
+                    }
+                });
+            }
+            $(l).parents('li').remove();
         },
         showAddTimter: function () {
             $('[id^=spinner-]').each(function() {
