@@ -191,7 +191,7 @@ def getUserDevice(username):
         return devices
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
-    return [];
+    return []
 
 ## FRONT END ##
 @app.route('/')
@@ -211,6 +211,7 @@ def start():
 @app.route('/lights')
 def lights():
     if not session.get('logged_in'):
+        session['url'] = url_for('lights')
         return redirect(url_for('login'))
     else:
         return render_template('lights.html', lights = get_devices_by_cat('light'))
@@ -218,6 +219,7 @@ def lights():
 @app.route('/hydroponic')
 def hydroponic():
     if not session.get('logged_in'):
+        session['url'] = url_for('hydroponic')
         return redirect(url_for('login'))
     else:
         return render_template('hydroponic.html', hydro = get_devices_by_cat('hydroponic'))
@@ -225,6 +227,7 @@ def hydroponic():
 @app.route('/settings')
 def settings():
     if not session.get('logged_in'):
+        session['url'] = url_for('settings')
         return redirect(url_for('login'))
     else:
         return render_template('settings.html')
@@ -245,6 +248,8 @@ def login():
             session['username'] = username
             session['devices'] = getUserDevice(username)
             subscribe()
+            if 'url' in session:
+                return redirect(session['url'])
             return redirect(url_for('start'))
         else:
             app.logger.debug("Login is invalid")
@@ -338,11 +343,7 @@ def get_all_status():
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        args = [] 
-        for d in get_devices():
-            args.append(d['devId'])
-        query = "SELECT * FROM status where devId in ({seq})".format(seq=','.join(['?']*len(args)))
-        rs = cur.execute(query, args)
+        rs = cur.execute("SELECT * FROM status where devId IN (SELECT devId FROM device WHERE username=?)", (session.get('username'),))
         map = {}
         for row in rs:
             map.setdefault(row[0],row[1])
@@ -366,7 +367,7 @@ def get_timers():
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM timer ORDER BY devId, timer")
+        rs = cur.execute("SELECT * FROM timer WHERE devId IN (SELECT devId FROM device WHERE username=?) ORDER BY devId, timer", (session.get('username'),))
         items = []
         for row in rs:
             items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': toLocal(row[3]),'action': row[4]})
@@ -474,7 +475,7 @@ def delete_schedule(devId, timer=1):
         return "Device not found"
 
 # LOG
-@app.route('/api/v1.0/chart', methods=['GET'])
+@app.route('/api/v1.0/light-chart', methods=['GET'])
 def chartLog():
     if not checkToken(request):
         app.logger.debug("Token is invalid")
@@ -486,7 +487,7 @@ def chartLog():
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM log WHERE time >= ? AND time <= ? ORDER BY time", (start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
+        rs = cur.execute("SELECT * FROM log WHERE time >= ? AND time <= ? AND devId IN (SELECT devId FROM device WHERE username=? AND cat ='light') ORDER BY time", (start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S'), session.get('username')))
         map = {}
         tmp = {}
         series = []
@@ -507,13 +508,15 @@ def chartLog():
                         ts = te = None
             map.setdefault(k.split(" - ")[1],[]).append(divmod(tdelta, 60)[0])
 
-        for k, v in map.items():
+        # Get device name
+        for dev in get_devices_by_cat('light'):
             data = [0] * 7
-            indx = 0
-            for d in map[k]:
-                data[indx] = d
-                indx += 1
-            series.append({"name": k, "data": data})
+            if(dev['devId'] in map):
+                indx = 0
+                for d in map[dev['devId']]:
+                    data[indx] = d
+                    indx += 1
+            series.append({"name": dev['name'], "data": data})
 
         d = start
         while d <= end:
@@ -533,11 +536,10 @@ def hydroChartLog():
     try:
         start = datetime.now().astimezone(pytz.timezone("Asia/Ho_Chi_Minh")).replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(1)
-
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM log WHERE devid = ? AND time >= ? AND time < ? ORDER BY time", ('sonoff1', start.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S'), end.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')))
+        rs = cur.execute("SELECT * FROM log WHERE time >= ? AND time < ? AND devId IN (SELECT devId FROM device WHERE username=? AND cat ='hydroponic') ORDER BY time", (start.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S'), end.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S'), session.get('username')))
         series = []
         labels = []
         tdelta = 0
@@ -550,16 +552,22 @@ def hydroChartLog():
                 te = datetime.strptime(row[2],'%Y-%m-%d %H:%M:%S').astimezone(pytz.timezone("Asia/Ho_Chi_Minh"))
                 if ts is not None:
                     tdelta += (te - ts).total_seconds()
-                    map.setdefault(ts.strftime('%H:%M'),tdelta)
+                    map.setdefault(row[0] + " - " + ts.strftime('%H:%M'),tdelta)
                     ts = te = None
                     tdelta = 0
-        data = [0] * 48
-        for k, v in map.items():
-            idx = int(k.split(':')[0]) * 2
-            if int(k.split(':')[1]) > 0:
-                idx += 1
-            data[idx] = map[k]
-        series.append({"name": 'sonoff1', "data": data})
+        print(map)
+        # Get device name
+        for dev in get_devices_by_cat('hydroponic'):
+            data = [0] * 48
+            for k, v in map.items():
+                id = k.split(' - ')[0]
+                t = k.split(' - ')[1]
+                if(dev['devId'] == id):
+                    idx = int(t.split(':')[0]) * 2
+                    if int(t.split(':')[1]) > 0:
+                        idx += 1
+                    data[idx] = map[k]
+            series.append({"name": dev['name'], "data": data})
 
         d = start
         while d < end:

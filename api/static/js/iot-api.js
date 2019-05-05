@@ -45,32 +45,18 @@ var _IOTdevices_
             }
         },
         convertDevId: function (id) {
-            return id.replace('switch-','').replace('light-','').replace('other-','');
+            var args = id.split("-");
+            if(args.length > 1){
+                return args[args.length-1]
+            }
+            console.log("Wrong format " + id);
+            return id;
         },
         revertSwitchId: function (devId) {
             return 'switch-'+devId;
         },
         revertSwitchCatId: function (cat, devId) {
             return 'switch-'+cat+'-'+devId;
-        },
-        revertName: function (devId) {
-            switch (devId) {
-                //Exterior
-                case 'sonoff2':
-                    return 'Front doors';
-                case 'sonoff1':
-                    return 'Pumper';
-                case 'sonoff-valve':
-                    return 'Valve';
-                //Interior
-                // case 'switch-light-1':
-                // case 'switch-light-2':
-                // case 'switch-light-3':
-                // case 'switch-light-4':
-                // case 'switch-light-5':
-                default:
-                    return '';
-            }
         },
         loadTimerDevice: function () {
             console.log('api begin call get timer for devices');
@@ -250,14 +236,9 @@ var _IOTdevices_
         },
         drawLightChart: function () {
             // Bar Chart initialization settings - Chartist.js
-            $.get("/api/v1.0/chart", function(data, status){
+            $.get("/api/v1.0/light-chart", function(data, status){
                 if(data){
                     var data01 = JSON.parse(data);
-                    if (data01.series != null) {
-                        data01.series.forEach(function(obj) {
-                            obj.name = api.revertName(obj.name)
-                        });
-                    }
                     var options01 = {
                         axisY: {
                             labelInterpolationFnc: function(value) {
@@ -313,11 +294,6 @@ var _IOTdevices_
             $.get("/api/v1.0/hydro-chart", function(data, status){
                 if(data){
                     var data01 = JSON.parse(data);
-                    if (data01.series != null) {
-                        data01.series.forEach(function(obj) {
-                            obj.name = api.revertName(obj.name)
-                        });
-                    }
                     var options01 = {
                         axisY: {
                             labelInterpolationFnc: function(value) {
