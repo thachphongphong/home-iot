@@ -193,6 +193,10 @@ def getUserDevice(username):
         app.logger.debug("Database error: %s" % e)
     return []
 
+def refresh_device_session():
+    if 'username' in session:
+        session['devices'] = getUserDevice(session.get('username'))
+
 ## FRONT END ##
 @app.route('/')
 def start():
@@ -619,6 +623,7 @@ def add_device():
             app.logger.debug("Update device %s", data)
             cur.execute("UPDATE device SET devId=?, name=?, status=?, power=?, vol=?, cat=?, icon=? WHERE username=? AND devId=?", (data['devId'], data['name'], data['status'], data['power'], data['vol'], data['cat'], data['icon'], username, data['devId']))
         db.commit()
+        refresh_device_session()
         app.logger.debug("Record successfully added %s", data)
         return json.dumps({'devId': data['devId'], 'name': data['name'], 'status': data['status'], 'power': data['power'], 'vol': data['vol'], 'cat': data['cat'], 'icon': data['icon']})
     except sql.Error as e:
@@ -647,6 +652,7 @@ def delete_device(devId):
             cur.execute("DELETE FROM device WHERE devId=? AND username=?", (devId,username))
             db.commit()
             app.logger.debug("Record successfully deleted %s", devId)
+            refresh_device_session()
             return devId
     except sql.Error as e:
         db.rollback()
