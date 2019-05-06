@@ -52,9 +52,8 @@ bootstrap = Bootstrap(app)
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
     app.logger.debug("MQTT is connected")
-    # for dev in get_devices():
-    #    app.logger.debug("Subscribe device topic %s" % id)
-    #    mqtt.subscribe("stat/"+dev.devId+"/POWER", 0)
+    with app.app_context():
+        subscribe()
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
@@ -103,12 +102,12 @@ def handle_mqtt_message(client, userdata, message):
 
 ## FUNCTION ##
 def subscribe():
-    for dev in get_devices():
-       mqtt.subscribe("stat/"+dev['devId']+"/POWER", 0)
+    for row in getUserDevice(None):
+       mqtt.subscribe("stat/"+row[1]+"/POWER", 0)
 
-def un_subscribe():
+def un_subscribe(devId):
     for dev in get_devices():
-       mqtt.unsubscribe("stat/"+dev['devId']+"/POWER")
+       mqtt.unsubscribe("stat/"+devId+"/POWER")
 
 def get_devices():
     devices = []
@@ -186,7 +185,10 @@ def getUserDevice(username):
     app.logger.debug("Load devices for user %s" % (username,))
     try:
         cur = get_db().cursor()
-        cur = cur.execute("SELECT * FROM device WHERE username=?", (username,))
+        if not username:
+            cur = cur.execute("SELECT * FROM device")
+        else:
+            cur = cur.execute("SELECT * FROM device WHERE username=?", (username,))
         devices = cur.fetchall()
         return devices
     except sql.Error as e:
@@ -251,7 +253,6 @@ def login():
             session['logged_in'] = True
             session['username'] = username
             session['devices'] = getUserDevice(username)
-            subscribe()
             if 'url' in session:
                 return redirect(session['url'])
             return redirect(url_for('start'))
@@ -264,7 +265,6 @@ def login():
 
 @app.route("/logout")
 def logout():
-    un_subscribe()
     session.clear()
     return redirect(url_for('login'))
 
@@ -651,6 +651,7 @@ def delete_device(devId):
             app.logger.debug("Delete device %s %s" % (devId, username))
             cur.execute("DELETE FROM device WHERE devId=? AND username=?", (devId,username))
             db.commit()
+            un_subscribe(devId)
             app.logger.debug("Record successfully deleted %s", devId)
             refresh_device_session()
             return devId
