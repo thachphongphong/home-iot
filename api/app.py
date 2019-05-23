@@ -178,8 +178,7 @@ def checkUser(username, password):
             return True
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
-    return False;
-
+    return False
 
 def getUserDevice(username):
     app.logger.debug("Load devices for user %s" % (username,))
@@ -198,6 +197,25 @@ def getUserDevice(username):
 def refresh_device_session():
     if 'username' in session:
         session['devices'] = getUserDevice(session.get('username'))
+
+def getUsername(request):
+    username = session.get('username')
+    if username is None:
+        username = request.headers.get('user-id')
+    return username
+
+def checkUserId(request):
+    username = request.headers.get('user-id')
+    if username is not None:
+        try:
+            cur = get_db().cursor()
+            cur = cur.execute("SELECT * FROM user WHERE username=?", (username,))
+            data = cur.fetchone()
+            if data is not None:
+                return True
+        except sql.Error as e:
+            app.logger.debug("Database error: %s" % e)
+        return False
 
 ## FRONT END ##
 @app.route('/')
@@ -312,7 +330,7 @@ def post_light_status(devId):
     if (data is None or data['status'] is None):
         app.logger.debug("Status is missing")
         abort(500)
-    if checkDevice(devId):
+    if checkDevice(devId) or checkUserId(request):
         try:
             db = get_db()
             db.row_factory = sql.Row
@@ -344,20 +362,26 @@ def get_all_status():
         app.logger.debug("Token is invalid")
         abort(404)
     try:
+        username = getUsername(request)
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM status where devId IN (SELECT devId FROM device WHERE username=?)", (session.get('username'),))
+        rs = cur.execute("SELECT * FROM status where devId IN (SELECT devId FROM device WHERE username=?)", (username,))
         map = {}
+        status = []
         for row in rs:
             map.setdefault(row[0],row[1])
+            status.append({'devId': row[0], 'status': row[1]})
         items = []
         for d in get_devices():
             status = 0
             if(d['devId'] in map):
                 status = map[d['devId']]
             items.append({'devId': d['devId'], 'status': status, 'cat': d['cat']})
-        return json.dumps(items)
+        if 'username' in session:
+                return json.dumps(items)
+        else:
+            return json.dumps(status)
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
     return ""
@@ -368,10 +392,11 @@ def get_timers():
         app.logger.debug("Token is invalid")
         abort(404)
     try:
+        username = getUsername(request)
         db = get_db()
         db.row_factory = sql.Row
         cur = db.cursor()
-        rs = cur.execute("SELECT * FROM timer WHERE devId IN (SELECT devId FROM device WHERE username=?) ORDER BY devId, timer", (session.get('username'),))
+        rs = cur.execute("SELECT * FROM timer WHERE devId IN (SELECT devId FROM device WHERE username=?) ORDER BY devId, timer", (username,))
         items = []
         for row in rs:
             items.append({'devId': row[0], 'timer': row[1], 'period': row[2], 'at': toLocal(row[3]),'action': row[4]})
@@ -589,7 +614,7 @@ def get_user_devices():
         app.logger.debug("Token is invalid")
         abort(404)
     try:
-        username = session.get('username');
+        username = getUsername(request)
         if username is not None:
             app.logger.debug("Get devices for user: %s" % username)
             db = get_db()
@@ -599,7 +624,10 @@ def get_user_devices():
             items = []
             for row in rs:
                 items.append({'devId': row[1], 'name': row[2], 'status': row[3], 'power': row[4], 'vol': row[5], 'cat': row[6], 'icon': row[7]})
-            return json.dumps({'data': items})
+            if 'username' in session:
+                return json.dumps({'data': items})
+            else:
+                return json.dumps(items)
     except sql.Error as e:
         app.logger.debug("Database error: %s" % e)
     return ""
@@ -610,7 +638,7 @@ def add_device():
         app.logger.debug("Token is invalid")
         abort(404)
     try:
-        username = session.get('username');
+        username = session.get('username')
         data = request.json
         db = get_db()
         cur = db.cursor()
