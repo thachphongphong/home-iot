@@ -1,0 +1,228 @@
+{% extends "layout.html" %}
+{% block title %}Lights{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link href="/static/css/iot-light.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<div id="main">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <!-- Camera 1  START -->
+          <div class="card active" data-unit="switch-camera-1">
+            <div class="card-img-top card-stream">
+              <div class="embed-responsive embed-responsive-16by9">
+                {% if name %}
+                    <img src="http://iothome.ddns.net/cgi-bin/nph-zms?mode=jpeg&monitor=5&scale=100&maxfps=30&buffer=1000&user={{name}}&pass={{pss}}" />
+                {% endif %}
+                <div class="card-preloader">
+                  <div class="center-preloader d-flex align-items-center">
+                    <div class="spinners">
+                      <div class="spinner01"></div>
+                      <div class="spinner02"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-img-top card-stream off">
+              <div class="embed-responsive embed-responsive-16by9">
+                <h2 class="center-abs">OFF</h2>
+              </div>
+            </div>
+            <!-- Camera switch START -->
+            <div class="card-body d-flex">
+              <svg class="icon-sprite">
+                <use xlink:href="/static/images/icons-sprite.svg#camera"/>
+              </svg>
+              <h5>Outdoor front</h5>
+              <label class="switch ml-auto checked">
+                <input type="checkbox" id="switch-camera-1" checked>
+              </label>
+            </div>
+            <!-- Camera switch END -->
+            <hr class="my-0">
+            <!-- Bulb details START -->
+            <ul class="list-group borderless px-1">
+              <li class="list-group-item pt-3 pb-2">
+                <p class="specs">Connection</p>
+                <p class="ml-auto mb-0 py-1 text-success">OK</p>
+              </li>
+              <li class="list-group-item py-2">
+                <p class="specs">Night vision</p>
+                <div class="btn-group btn-group-toggle ml-auto py-1" data-toggle="buttons">
+                  <label class="btn btn-label btn-sm mb-0 active">
+                    <input type="radio" name="options" id="c1-nv-auto" autocomplete="off" checked> AUTO
+                  </label>
+                  <label class="btn btn-label btn-sm mb-0">
+                    <input type="radio" name="options" id="c1-nv-on" autocomplete="off"> ON
+                  </label>
+                  <label class="btn btn-label btn-sm mb-0">
+                    <input type="radio" name="options" id="c1-nv-off" autocomplete="off"> OFF
+                  </label>
+                </div>
+              </li>
+              <li class="list-group-item pt-2 pb-4">
+                <p class="specs">Timelaps recording</p>
+                <div class="btn-group btn-group-toggle ml-auto py-1" data-toggle="buttons">
+                  <label class="btn btn-label btn-sm mb-0 active">
+                    <input type="radio" name="options" id="c1-rec-on" autocomplete="off" checked> ENABLE
+                  </label>
+                  <label class="btn btn-label btn-sm mb-0">
+                    <input type="radio" name="options" id="c1-rec-off" autocomplete="off"> DISABLE
+                  </label>
+                </div>
+              </li>
+            </ul>
+            <!-- Bulb details END -->
+          </div>
+          <!-- Camera 1  END -->
+        </div>
+        <div class="col-sm-12 col-md-6">
+          <!-- Camera 2  START -->
+          <div class="card" data-unit="switch-camera-2">
+            <div class="card-img-top card-stream">
+              <div class="embed-responsive embed-responsive-16by9">
+                {% if name %}
+                    <img src="http://iothome.ddns.net/cgi-bin/nph-zms?mode=jpeg&monitor=4&scale=100&maxfps=30&buffer=1000&user={{name}}&pass={{pss}}" />
+                {% endif %}
+                <div class="card-preloader">
+                  <div class="center-preloader d-flex align-items-center">
+                    <div class="spinners">
+                      <div class="spinner01"></div>
+                      <div class="spinner02"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-img-top card-stream off">
+              <div class="embed-responsive embed-responsive-16by9">
+                <h2 class="center-abs">OFF</h2>
+              </div>
+            </div>
+            <!-- Camera switch START -->
+            <div class="card-body d-flex">
+              <svg class="icon-sprite">
+                    <use xlink:href="/static/images/icons-sprite.svg#camera"/>
+              </svg>
+              <h5>Ca com's room</h5>
+              <label class="switch ml-auto">
+                <input type="checkbox" id="switch-camera-2">
+              </label>
+            </div>
+            <!-- Camera switch END -->
+            <hr class="my-0">
+            <!-- Bulb details START -->
+            <ul class="list-group borderless px-1">
+              <li class="list-group-item pt-3 pb-2">
+                <p class="specs">Connection</p>
+                <p class="ml-auto mb-0 py-1 text-success">OK</p>
+              </li>
+              <li class="list-group-item flex-column py-2">
+                <p class="specs w-100">Night vision</p>
+                <div class="btn-group btn-group-toggle w-100 py-2" data-toggle="buttons">
+                  <label class="btn btn-label btn-sm mb-0 col-4 active">
+                    <input type="radio" name="options" id="c2-nv-auto" autocomplete="off" checked> AUTO
+                  </label>
+                  <label class="btn btn-label btn-sm mb-0 col-4">
+                    <input type="radio" name="options" id="c2-nv-on" autocomplete="off"> ON
+                  </label>
+                  <label class="btn btn-label btn-sm mb-0 col-4">
+                    <input type="radio" name="options" id="c2-nv-off" autocomplete="off"> OFF
+                  </label>
+                </div>
+                <div class="info-holder info-ct">
+                  <div data-toggle="popover-all" data-content="Group of radio buttons." data-original-title="Option settings" data-placement="bottom" data-offset="0,-32"></div>
+                </div>
+              </li>
+              <li class="list-group-item flex-column pt-2 pb-4">
+                <p class="specs w-100">Timelaps recording</p>
+                <div class="btn-group btn-group-toggle w-100 ml-auto py-2" data-toggle="buttons">
+                  <label class="btn btn-label btn-sm mb-0 w-100 active">
+                    <input type="radio" name="options" id="c2-rec-on" autocomplete="off" checked> ENABLE
+                  </label>
+                  <label class="btn btn-label btn-sm mb-0 w-100">
+                    <input type="radio" name="options" id="c2-rec-off" autocomplete="off"> DISABLE
+                  </label>
+                </div>
+              </li>
+            </ul>
+            <!-- Bulb details END -->
+          </div>
+          <!-- Camera 2  END -->
+        </div>
+      </div>
+    </div>
+    <!-- Main content overlay when side menu appears  -->
+    <div class="cover-offcanvas" data-toggle="offcanvas"></div>
+  </div>
+{% endblock %}
+{% block js %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('.switch input[type="checkbox"]').unbind( "change" );
+            $('.switch input[type="checkbox"]').on("change", function(t) {
+
+                // Check the time between changes to prevert Android native browser execute twice
+                // If you dont need support for Android native browser - just call "switchSingle" function
+                if (this.last) {
+
+                this.diff = t.timeStamp - this.last;
+
+                // Don't execute if the time between changes is too short (less than 250ms) - Android native browser "twice bug"
+                // The real time between two human taps/clicks is usually much more than 250ms"
+                if (this.diff > 250) {
+
+                    this.last = t.timeStamp;
+
+                    iot.switchSingle(this.id, this.checked);
+
+                } else {
+                    return false;
+                }
+
+                } else {
+
+                // First attempt on this switch element
+                this.last = t.timeStamp;
+
+                iot.switchSingle(this.id, this.checked);
+
+                }
+            });
+
+        }); // docready END
+
+    // Apply necessary changes, functionality when content is loaded
+    $(window).on('load', function() {
+
+        // if ($('[data-unit="switch-camera-1"]').hasClass("active")) {
+        //     // var activeVideo = $('[data-unit="switch-camera-1"] video').get(0);
+
+        //     if (activeVideo.paused) {
+        //         activeVideo.autoplay = true;
+        //         activeVideo.load();
+        //         activeVideo.play();
+        //     } else {
+        //         activeVideo.pause();
+        //     }
+        // }
+
+        // if ($('[data-unit="switch-camera-2"]').hasClass("active")) {
+        //     var activeVideo = $('[data-unit="switch-camera-2"] video').get(0);
+
+        //     if (activeVideo.paused) {
+        //         activeVideo.autoplay = true;
+        //         activeVideo.load();
+        //         activeVideo.play();
+        //     } else {
+        //         activeVideo.pause();
+        //     }
+        // }
+
+    });
+    </script>
+{% endblock %}

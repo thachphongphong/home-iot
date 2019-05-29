@@ -5566,7 +5566,7 @@ a.bg-extra:focus, a.bg-extra:hover, button.bg-extra:focus, button.bg-extra:hover
     content: ""
 }
 
-.embed-responsive .embed-responsive-item, .embed-responsive embed, .embed-responsive iframe, .embed-responsive object, .embed-responsive video {
+.embed-responsive .embed-responsive-item, .embed-responsive embed, .embed-responsive iframe, .embed-responsive object, .embed-responsive img {
     position: absolute;
     top: 0;
     bottom: 0;

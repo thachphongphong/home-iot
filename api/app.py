@@ -256,6 +256,14 @@ def settings():
     else:
         return render_template('settings.html')
 
+@app.route('/camera')
+def camera():
+    if not session.get('logged_in'):
+        session['url'] = url_for('camera')
+        return redirect(url_for('login'))
+    else:
+        return render_template('camera.html', name = config['DEFAULT']['CAMERA_USERNAME'], pss = config['DEFAULT']['CAMERA_PASSWORD'])
+
 @app.route('/iot')
 def index():
     return 'UP'
