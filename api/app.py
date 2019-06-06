@@ -266,7 +266,23 @@ def camera():
 
 @app.route('/iot')
 def index():
-    return 'UP'
+    lights = []
+    others = []
+    for row in getUserDevice(None):
+        dev = dict(username = row[0],
+            devId = row[1],
+            name = row[2],
+            status = row[3], 
+            power = row[4],
+            vol = row[5],
+            cat = row[6],
+            icon = row[7]
+            )
+        if(dev['cat'] == 'light'):
+            lights.append(dev)
+        else:
+            others.append(dev)
+    return render_template('index.html', lights = lights, others = others)
 
 @app.route('/login',methods=['GET', 'POST'])
 def login():

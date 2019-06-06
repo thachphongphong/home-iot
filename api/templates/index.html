@@ -1,235 +1,200 @@
-{% extends "bootstrap/base.html" %}
-{% block title %}HOME-IOT{% endblock %}
-
-{% block styles %}
-{{ super() }}
+{% extends "layout.html" %}
+{% block title %}Home{% endblock %}
+{% block head %}
+    {{ super() }}
 {% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script type="text/javascript" charset="utf-8">
-    $(document).ready(function() {
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-        // $('#publish').click(function(event) {
-        //     var topic = $('#topic').val();
-        //     var message = $('#message').val();
-        //     var qos = $('#qos').val();
-        //     var data = '{"topic": "' + topic + '", "message": "' + message + '", "qos": ' + qos + '}';
-        //     socket.emit('publish', data=data);
-        // });
-        //
-        // $('#subscribe').click(function(event) {
-        //     var topic = $('#subscribe_topic').val();
-        //     var qos = $('#subscribe_qos').val();
-        //     var data = '{"topic": "' + topic + '", "qos": ' + qos + '}';
-        //     socket.emit('subscribe', data=data);
-        //     $('#subscribe').hide();
-        //     $('#unsubscribe').show();
-        //     $('#subscribe_topic').prop('readonly', true);
-        // });
-        //
-        // $('#unsubscribe').click(function(event) {
-        //     socket.emit('unsubscribe_all');
-        //     $('#subscribe').show();
-        //     $('#unsubscribe').hide();
-        //     $('#subscribe_topic').prop('readonly', false);
-        // });
-
-        socket.on('mqtt_message', function(data) {
-            //console.log(data);
-            var id = $('#topic').val();
-            // var text = '(' + data['topic'] + ' qos: ' + data['qos'] + ') ' + data['payload'];
-            //  var $textarea = $('#subscribe_messages');
-            // $textarea.val($textarea.val() + text + '\n');
-            loadTopic(id);
-        })
-
-        loadTopic($('#topic').val());
-
-        $( "#topic" ).change(function() {
-            var id = $( this ).val();
-            loadTopic(id);
-        });
-    });
-
-    function loadTopic(id) {
-        $.get("/api/v1.0/"+id, function(data, status){
-            var $textarea = $('#subscribe_messages');
-            var o = {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'};
-            var dt = new Date($.now());
-            var text = dt.toLocaleDateString('en-US', o) + '- Device: ' + getDevName(id) + '  Status: ' + data;
-            if(id == $('#topic').val())
-            $textarea.val($textarea.val() + text + '\n');
-        });
-    }
-
-    function getDevName(id) {
-       return $("#topic option[value='"+id+"']").text();
-    }
-
-
-    $.ajaxSetup({
-        headers: { 'Authorization': 'Bearer hWd3uNMVpjaRAbPs9Nt3' }
-    });
-</script>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-xs-12">
-            <h1>HOME-IOT</h1>
-        </div>
-    </div>
-    <div class="row">
-       <!-- <div class="col-xs-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Publish MQTT Message</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="col-xs-12">
-                        <div class="row">
-                            <div class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Topic: </label>
-                                    <div class="col-xs-8">
-                                        <input id="topic" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Message: </label>
-                                    <div class="col-xs-8">
-                                        <input id="message" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Qos: </label>
-                                    <div class="col-xs-8">
-                                        <select id="qos" class="form-control">
-                                            <option value=0>0</option>
-                                            <option value=1>1</option>
-                                            <option value=2>2</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="col-xs-8 col-xs-offset-4">
-                                        <button id="publish" class="btn btn-primary">Publish</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="row">
+{% if lights %}
+    <div class="col-sm-12 col-md-6 col-xl-4">
+        <!-- Interior lights  START -->
+        <div class="card" data-unit-group="switch-lights">
+            <div class="card-body">
+                <h3 class="card-title">Lights</h3>
             </div>
-        </div>
-        <div class="col-xs-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Subscribe MQTT Messages</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="col-xs-12">
-                        <div class="row">
-                            <div class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Topic:</label>
-                                    <div class="col-xs-8">
-                                        <input id="subscribe_topic" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Qos: </label>
-                                    <div class="col-xs-8">
-                                        <select id="subscribe_qos" class="form-control">
-                                            <option value=0>0</option>
-                                            <option value=1>1</option>
-                                            <option value=2>2</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="col-xs-8 col-xs-offset-4">
-                                        <button id="subscribe" class="btn btn-primary">Subscribe</button>
-                                        <button id="unsubscribe" class="btn btn-default" style="display: none;" >Unsubscribe</button>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Messages:</label>
-                                    <div class="col-xs-8">
-                                        <textarea id="subscribe_messages" class="form-control" rows=10></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>-->
-        <div class="col-xs-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Device Status</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="col-xs-12">
-                        <div class="row">
-                            <div class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Topic: </label>
-                                    <div class="col-xs-8">
-                                        <select id="topic" class="form-control">
-                                            <option value="sonoff1">Front Light</option>
-                                            <option value="sonoff2">2nd Floor Light</option>
-                                            <option value="sonoff-valve">Valve</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Messages:</label>
-                                    <div class="col-xs-8">
-                                        <textarea id="subscribe_messages" class="form-control" rows=10></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xs-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Device Timers</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="col-xs-12">
-                        <div class="row">
-                            <div class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Device: </label>
-                                    <div class="col-xs-8">
-                                        <select id="device" class="form-control">
-                                            <option value="sonoff1">Front Light</option>
-                                            <option value="sonoff2">2nd Floor Light</option>
-                                            <option value="sonoff-valve">Valve</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label col-xs-4">Messages:</label>
-                                    <div class="col-xs-8">
-                                        <textarea id="timer" class="form-control" rows=10 >{% for timer in timers %}{{timer[0]}} - {{timer[1]}} - {{timer[2]}} - {{ timer[3] | tolocal }} - {% if timer[4] == 0 %}OFF{% elif timer[4] == 1 %}ON{% else %}TOGGLE{% endif %}&#13;&#10;{% endfor %}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            {% for light in lights %}
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex active" data-unit="switch-{{ light['cat'] }}-{{ light['devId'] }}">
+                    <svg class="icon-sprite">
+                        <use xlink:href="/static/images/icons-sprite.svg#{{ light['icon'] }}"/>
+                    </svg>
+                    <h5>{{ light['name'] }}</h5>
+                    <label class="switch ml-auto checked">
+                        <input type="checkbox" id="switch-{{ light['cat'] }}-{{ light['devId'] }}" checked>
+                    </label>
+                </li>
+            </ul>
+            {% endfor %}
+            <!-- Interior lights  END -->
+            <div class="card-body">
+                <div class="lights-controls" data-controls="switch-lights">
+                    <button data-action="all-on" type="button" class="btn btn-primary lights-control">All <strong>ON</strong></button>
+                    <button data-action="all-off" type="button" class="btn btn-secondary lights-control">All <strong>OFF</strong></button>
                 </div>
             </div>
         </div>
     </div>
+{% endif %}
+{% if others %}
+    <div class="col-sm-12 col-md-6 col-xl-4">
+        <!-- Other START -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Others</h3>
+            </div>
+        </div>
+        {% for other in others %}
+        <div class="card" data-unit="switch-{{ other['cat'] }}-{{ other['devId'] }}">
+            <div class="card-body d-flex">
+                <svg class="icon-sprite">
+                    <use xlink:href="/static/images/icons-sprite.svg#{{ other['icon'] }}"/>
+                </svg>
+                <h5>{{ other['name'] }}</h5>
+                <label class="switch ml-auto">
+                    <input type="checkbox" id="switch-{{ other['cat'] }}-{{ other['devId'] }}">
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+        <!-- Other END -->
+    </div>
+{% endif %}
 </div>
+{% endblock %}
+{% block js %}
+{{js|safe}}
+    <!-- jQuery -->
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+
+    <!-- Bootstrap bundle -->
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Cross browser support for SVG icon sprites -->
+    <script src="/static/js/svg4everybody.min.js"></script>
+
+    <!-- jQuery countdown timer plugin (Exit modal, Garage doors, Washing machine) -->
+    <script src="/static/js/iot-timer.min.js"></script>
+
+    <!-- Basic theme functionality (arming, garage doors, switches ...) - using jQuery -->
+    <script src="/static/js/iot-functions.min.js"></script>
+
+    <!-- Basic api - using jQuery -->
+    <script src="/static/js/iot-api.js"></script>
+
+    <!-- SocketIO bundle - using jQuery -->
+    <script src="/static/js/socket.io.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#minifier').click(function() {
+
+            $('#sidebar,#menu-minifier').toggleClass('mini');
+
+            // Save side menu status to localStorage if available (IE)
+            if (localStorage) {
+                checkboxValue = this.checked;
+                localStorage.setItem('minifier', checkboxValue);
+            }
+
+            });
+
+
+            // Side menu toogler for medium and small screens
+            $('[data-toggle="offcanvas"]').click(function() {
+            $('.row-offcanvas').toggleClass('active');
+            });
+
+
+            // Reposition to center when a modal is shown
+            $('.modal.centered').on('show.bs.modal', iot.centerModal);
+
+            // Reset/Stop countdown timer (EXIT NOW)
+            $('#armModal').on('hide.bs.modal', iot.clearCountdown);
+
+            // Alerts "Close" callback - hide modal and alert indicator dot when user closes all alerts
+            $('#alertsModal .alert').on('close.bs.alert', function() {
+            var sum = $('#alerts-toggler').attr('data-alerts');
+            sum = sum - 1;
+            $('#alerts-toggler').attr('data-alerts', sum);
+
+            if (sum === 0) {
+                $('#alertsModal').modal('hide');
+                $('#alerts-toggler').attr('data-toggle', 'none');
+
+            }
+
+            });
+
+            // Show/hide tips (popovers) - FAB button (right bottom on large screens)
+            $('#info-toggler').click(function() {
+
+            if ($('body').hasClass('info-active')) {
+                $('[data-toggle="popover-all"]').popover('hide');
+                $('body').removeClass('info-active');
+            } else {
+                $('[data-toggle="popover-all"]').popover('show');
+                $('body').addClass('info-active');
+            }
+            });
+
+            // Hide tips (popovers) by clicking outside
+            $('body').on('click', function(pop) {
+
+            if (pop.target.id !== 'info-toggler' && $('body').hasClass('info-active')) {
+                $('[data-toggle="popover-all"]').popover('hide');
+                $('body').removeClass('info-active');
+            }
+
+            });
+
+            $(".nav .nav-link").each(function() {
+            var path = $( this ).attr( "href" );
+            if(window.location.pathname == path){
+                //$(".nav").find(".active").removeClass("active");
+                $(this).addClass("active");
+            }
+
+            });
+
+            }); // docready END
+
+            // Apply necessary changes, functionality when content is loaded
+            $(window).on('load', function() {
+
+            // This script is necessary for cross browsers icon sprite support (IE9+, ...)
+            svg4everybody();
+
+            // "Timeout" function is not neccessary - important is to hide the preloader overlay
+            setTimeout(function() {
+
+            // Hide preloader overlay when content is loaded
+            $('#iot-preloader,.card-preloader').fadeOut();
+            $("#wrapper").removeClass("hidden");
+
+            // Check for Main contents scrollbar visibility and set right position for FAB button
+            iot.positionFab();
+
+            }, 800);
+
+            });
+
+            // Apply necessary changes if window resized
+            $(window).on('resize', function() {
+
+            // Modal reposition when the window is resized
+            $('.modal.centered:visible').each(iot.centerModal);
+
+            // Check for Main contents scrollbar visibility and set right position for FAB button
+            iot.positionFab();
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            // Update status from api
+            api.getStatus();
+
+            socket.on('mqtt_message', function(data) {
+                api.getStatus();
+            });
+
+        });
+    </script>
 {% endblock %}
