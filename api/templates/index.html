@@ -1,8 +1,5 @@
 {% extends "layout.html" %}
 {% block title %}Home{% endblock %}
-{% block head %}
-    {{ super() }}
-{% endblock %}
 {% block content %}
 <div class="row">
 {% if lights %}
@@ -61,6 +58,7 @@
 {% endif %}
 </div>
 {% endblock %}
+{% block buttons %}{% endblock %}
 {% block js %}
 {{js|safe}}
     <!-- jQuery -->
@@ -86,76 +84,8 @@
 
     <script>
         $(document).ready(function() {
-            $('#minifier').click(function() {
-
             $('#sidebar,#menu-minifier').toggleClass('mini');
-
-            // Save side menu status to localStorage if available (IE)
-            if (localStorage) {
-                checkboxValue = this.checked;
-                localStorage.setItem('minifier', checkboxValue);
-            }
-
-            });
-
-
-            // Side menu toogler for medium and small screens
-            $('[data-toggle="offcanvas"]').click(function() {
-            $('.row-offcanvas').toggleClass('active');
-            });
-
-
-            // Reposition to center when a modal is shown
-            $('.modal.centered').on('show.bs.modal', iot.centerModal);
-
-            // Reset/Stop countdown timer (EXIT NOW)
-            $('#armModal').on('hide.bs.modal', iot.clearCountdown);
-
-            // Alerts "Close" callback - hide modal and alert indicator dot when user closes all alerts
-            $('#alertsModal .alert').on('close.bs.alert', function() {
-            var sum = $('#alerts-toggler').attr('data-alerts');
-            sum = sum - 1;
-            $('#alerts-toggler').attr('data-alerts', sum);
-
-            if (sum === 0) {
-                $('#alertsModal').modal('hide');
-                $('#alerts-toggler').attr('data-toggle', 'none');
-
-            }
-
-            });
-
-            // Show/hide tips (popovers) - FAB button (right bottom on large screens)
-            $('#info-toggler').click(function() {
-
-            if ($('body').hasClass('info-active')) {
-                $('[data-toggle="popover-all"]').popover('hide');
-                $('body').removeClass('info-active');
-            } else {
-                $('[data-toggle="popover-all"]').popover('show');
-                $('body').addClass('info-active');
-            }
-            });
-
-            // Hide tips (popovers) by clicking outside
-            $('body').on('click', function(pop) {
-
-            if (pop.target.id !== 'info-toggler' && $('body').hasClass('info-active')) {
-                $('[data-toggle="popover-all"]').popover('hide');
-                $('body').removeClass('info-active');
-            }
-
-            });
-
-            $(".nav .nav-link").each(function() {
-            var path = $( this ).attr( "href" );
-            if(window.location.pathname == path){
-                //$(".nav").find(".active").removeClass("active");
-                $(this).addClass("active");
-            }
-
-            });
-
+            $('#sidebar,#menu-minifier').hide();
             }); // docready END
 
             // Apply necessary changes, functionality when content is loaded
